@@ -5,32 +5,6 @@
 
 ## Event Types Endpoints
 
-### List Events
-- **GET** `/events`
-- Optional query parameters:
-  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
-  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
-- Examples:
-  - Get all events: `/events`
-  - Get future events: `/events?from=2025-01-01`
-  - Get past events: `/events?to=2024-12-31`
-  - Get events in date range: `/events?from=2025-01-01&to=2025-12-31`
-- Response format:
-```json
-[
-  {
-    "evt_id": 1,
-    "evt_name": "Annual Conference",
-    "evt_desc": "Annual tech conference with keynotes",
-    "evt_url": "https://conference.example.com",
-    "evt_from": "2025-06-01",
-    "evt_to": "2025-06-03",
-    "etp_id": 1,
-    "etp_name": "Conference"
-  }
-]
-```
-
 ### Get Single Event Type
 - **GET** `/event_types/{id}`
 - Returns single event type
@@ -70,8 +44,27 @@
 ## Events Endpoints
 
 ### List Events
-- **GET** `/events`
-- Returns array of all events with their event type names
+- **GET** `/events/list`
+- Optional URL query parameters:
+  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
+  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
+
+- **POST** `/events/list`
+- Optional URL query parameters:
+  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
+  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
+- Optional request body:
+```json
+{
+    "evt_id": 1    // Single event ID
+}
+```
+or
+```json
+{
+    "evt_id": [1, 2, 3]    // Array of event IDs
+}
+```
 - Response format:
 ```json
 [
@@ -87,6 +80,40 @@
   }
 ]
 ```
+
+### Usage Examples
+
+1. Get all events (no filters):
+```bash
+curl -X POST "http://localhost:3000/api/events/list"
+```
+
+2. Get specific events by ID:
+```bash
+curl -X POST "http://localhost:3000/api/events/list" \
+  -H "Content-Type: application/json" \
+  -d '{"evt_id": [1, 2, 3]}'
+```
+
+3. Get single event by ID:
+```bash
+curl -X POST "http://localhost:3000/api/events/list" \
+  -H "Content-Type: application/json" \
+  -d '{"evt_id": 1}'
+```
+
+4. Combine ID and date filters:
+```bash
+curl -X POST "http://localhost:3000/api/events/list?from=2025-01-01&to=2025-12-31" \
+  -H "Content-Type: application/json" \
+  -d '{"evt_id": [1, 2, 3]}'
+```
+### Notes
+- All filters are optional
+- Events are ordered by start date and event ID
+- Date filters can be combined with event ID filters
+- Event ID can be either a single integer or an array of integers
+
 ### Get Single Event
 - **GET** `/events/{id}`
 - Returns single event with event type name and linked events
@@ -181,61 +208,6 @@
   "error": "Error message description"
 }
 ```
-
-
-# Events Management API Documentation
-
-## Base URL
-`http://localhost:3000/api`
-
-## Events Endpoints
-
-### Get Single Event
-- **GET** `/events/{id}`
-- Returns single event with event type name and linked events
-- Response format:
-```json
-{
-  "evt_id": 1,
-  "evt_name": "Annual Conference",
-  "evt_desc": "Annual tech conference with keynotes",
-  "evt_url": "https://conference.example.com",
-  "evt_from": "2025-06-01",
-  "evt_to": "2025-06-03",
-  "etp_id": 1,
-  "etp_name": "Conference",
-  "linked_events": [
-    {
-      "evt_id": 2,
-      "evt_name": "Workshop Day",
-      "evt_desc": "Pre-conference workshop",
-      "evt_url": "https://workshop.example.com",
-      "evt_from": "2025-05-31",
-      "evt_to": "2025-05-31",
-      "etp_id": 2
-    }
-  ]
-}
-```
-
-## Event Links Endpoints
-
-### List Event Links
-- **GET** `/events/{id}/links`
-- Returns all events linked to the specified event
-- Returns array of linked event objects
-
-### Add Event Link
-- **POST** `/events/{id}/links/{target_id}`
-- Creates a link between two events
-- No request body needed
-- Returns success message
-
-### Remove Event Link
-- **DELETE** `/events/{id}/links/{target_id}`
-- Removes link between two events
-- Returns success message
-
 ## Data Structure
 
 ### Event Links Table
