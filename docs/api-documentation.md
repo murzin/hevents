@@ -5,6 +5,19 @@
 
 ## Event Types Endpoints
 
+### List Event Types
+- **GET** `/event_types`
+- Returns array of all event types
+- Response format:
+```json
+[
+  {
+    "etp_id": 1,
+    "etp_name": "Conference"
+  }
+]
+```
+
 ### Get Single Event Type
 - **GET** `/event_types/{id}`
 - Returns single event type
