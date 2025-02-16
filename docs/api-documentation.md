@@ -5,13 +5,26 @@
 
 ## Event Types Endpoints
 
-### List Event Types
-- **GET** `/event_types`
-- Returns array of all event types
+### List Events
+- **GET** `/events`
+- Optional query parameters:
+  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
+  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
+- Examples:
+  - Get all events: `/events`
+  - Get future events: `/events?from=2025-01-01`
+  - Get past events: `/events?to=2024-12-31`
+  - Get events in date range: `/events?from=2025-01-01&to=2025-12-31`
 - Response format:
 ```json
 [
   {
+    "evt_id": 1,
+    "evt_name": "Annual Conference",
+    "evt_desc": "Annual tech conference with keynotes",
+    "evt_url": "https://conference.example.com",
+    "evt_from": "2025-06-01",
+    "evt_to": "2025-06-03",
     "etp_id": 1,
     "etp_name": "Conference"
   }

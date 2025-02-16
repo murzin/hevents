@@ -4,11 +4,28 @@ use Mojo::JSON qw(decode_json);
 
 sub list {
     my $self = shift;
-    my $results = $self->sqlite->db->query(q{
-        SELECT e.*, et.etp_name 
-        FROM events e 
+    my $from_date = $self->param('from');
+    my $to_date = $self->param('to');
+
+    my $query = q{
+        SELECT e.*, et.etp_name
+        FROM events e
         JOIN event_types et ON e.etp_id = et.etp_id
-    });
+        WHERE 1=1
+    };
+    my @params;
+
+    if ($from_date) {
+        $query .= " AND e.evt_from >= ?";
+        push @params, $from_date;
+    }
+
+    if ($to_date) {
+        $query .= " AND e.evt_to <= ?";
+        push @params, $to_date;
+    }
+
+    my $results = $self->sqlite->db->query($query, @params);
     $self->render(json => $results->hashes->to_array);
 }
 
