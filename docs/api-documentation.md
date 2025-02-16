@@ -87,11 +87,33 @@
   }
 ]
 ```
-
 ### Get Single Event
 - **GET** `/events/{id}`
-- Returns single event with event type name
-- Response format same as list item
+- Returns single event with event type name and linked events
+- Response format:
+```json
+{
+  "evt_id": 1,
+  "evt_name": "Annual Conference",
+  "evt_desc": "Annual tech conference with keynotes",
+  "evt_url": "https://conference.example.com",
+  "evt_from": "2025-06-01",
+  "evt_to": "2025-06-03",
+  "etp_id": 1,
+  "etp_name": "Conference",
+  "linked_events": [
+    {
+      "evt_id": 2,
+      "evt_name": "Workshop Day",
+      "evt_desc": "Pre-conference workshop",
+      "evt_url": "https://workshop.example.com",
+      "evt_from": "2025-05-31",
+      "evt_to": "2025-05-31",
+      "etp_id": 2
+    }
+  ]
+}
+```
 
 ### Create Event
 - **POST** `/events`
@@ -117,6 +139,25 @@
 - **DELETE** `/events/{id}`
 - Returns success message
 
+## Event Links Endpoints
+
+### List Event Links
+- **GET** `/events/{id}/links`
+- Returns all events linked to the specified event
+- Returns array of linked event objects
+
+### Add Event Link
+- **POST** `/events/{id}/links/{target_id}`
+- Creates a link between two events
+- No request body needed
+- Returns success message
+
+### Remove Event Link
+- **DELETE** `/events/{id}/links/{target_id}`
+- Removes link between two events
+- Returns success message
+
+
 ## Response Status Codes
 - 200: Success
 - 201: Created (for POST requests)
@@ -140,3 +181,65 @@
   "error": "Error message description"
 }
 ```
+
+
+# Events Management API Documentation
+
+## Base URL
+`http://localhost:3000/api`
+
+## Events Endpoints
+
+### Get Single Event
+- **GET** `/events/{id}`
+- Returns single event with event type name and linked events
+- Response format:
+```json
+{
+  "evt_id": 1,
+  "evt_name": "Annual Conference",
+  "evt_desc": "Annual tech conference with keynotes",
+  "evt_url": "https://conference.example.com",
+  "evt_from": "2025-06-01",
+  "evt_to": "2025-06-03",
+  "etp_id": 1,
+  "etp_name": "Conference",
+  "linked_events": [
+    {
+      "evt_id": 2,
+      "evt_name": "Workshop Day",
+      "evt_desc": "Pre-conference workshop",
+      "evt_url": "https://workshop.example.com",
+      "evt_from": "2025-05-31",
+      "evt_to": "2025-05-31",
+      "etp_id": 2
+    }
+  ]
+}
+```
+
+## Event Links Endpoints
+
+### List Event Links
+- **GET** `/events/{id}/links`
+- Returns all events linked to the specified event
+- Returns array of linked event objects
+
+### Add Event Link
+- **POST** `/events/{id}/links/{target_id}`
+- Creates a link between two events
+- No request body needed
+- Returns success message
+
+### Remove Event Link
+- **DELETE** `/events/{id}/links/{target_id}`
+- Removes link between two events
+- Returns success message
+
+## Data Structure
+
+### Event Links Table
+Simple many-to-many relationship table with two columns:
+- evt_id_1: First event ID (smaller ID of the pair)
+- evt_id_2: Second event ID (larger ID of the pair)
+- Primary key is (evt_id_1, evt_id_2)

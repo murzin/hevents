@@ -31,7 +31,19 @@ sub startup {
             FOREIGN KEY (etp_id) REFERENCES event_types(etp_id) ON DELETE CASCADE
         )
     });
-    
+
+    $sqlite->db->query(q{
+        CREATE TABLE IF NOT EXISTS event_links (
+            evt_id_1 INTEGER NOT NULL,
+            evt_id_2 INTEGER NOT NULL,
+            PRIMARY KEY (evt_id_1, evt_id_2),
+            FOREIGN KEY (evt_id_1) REFERENCES events(evt_id) ON DELETE CASCADE,
+            FOREIGN KEY (evt_id_2) REFERENCES events(evt_id) ON DELETE CASCADE
+        )
+    });
+
+
+
     # Routes
     my $r = $self->routes;
     
@@ -48,6 +60,12 @@ sub startup {
     $r->post('/api/events')->to('events#create');
     $r->put('/api/events/:id')->to('events#update');
     $r->delete('/api/events/:id')->to('events#delete');
+
+    # Event Links Routes
+    $r->get('/api/events/:id/links')->to('events#list_links');
+    $r->post('/api/events/:id/links/:target_id')->to('events#add_link');
+    $r->delete('/api/events/:id/links/:target_id')->to('events#remove_link');
+    
 }
 
 1;
