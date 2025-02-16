@@ -49,6 +49,7 @@ sub startup {
     
     # Event Types Routes
     $r->get('/api/event_types')->to('event_types#list');
+    $r->post('/api/event_types')->to('event_types#list');
     $r->get('/api/event_types/:id')->to('event_types#get');
     $r->post('/api/event_types')->to('event_types#create');
     $r->put('/api/event_types/:id')->to('event_types#update');
