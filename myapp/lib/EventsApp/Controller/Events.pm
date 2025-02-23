@@ -1,5 +1,6 @@
 package EventsApp::Controller::Events;
 use Mojo::Base 'Mojolicious::Controller';
+use Encode;
 
 sub list {
     my $self = shift;
@@ -10,7 +11,12 @@ sub list {
         JOIN event_places ep ON e.epl_id = ep.epl_id
     });
     $sth->execute();
-    $self->render(json => $sth->fetchall_arrayref({}));
+
+    #$self->render(json => $sth->fetchall_arrayref({}));
+    my $arr = $sth->fetchall_arrayref({});
+    $_->{evt_name} = decode_utf8($_->{evt_name}) for @$arr;
+    $self->render(json => $arr);
+
 }
 
 sub create {
