@@ -5,6 +5,11 @@ CREATE TABLE IF NOT EXISTS event_types (
     etp_name TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS event_places ((
+    epl_id INTEGER PRIMARY KEY,
+    epl_name TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS events (
     evt_id INTEGER PRIMARY KEY,
     evt_name TEXT NOT NULL,
@@ -13,7 +18,9 @@ CREATE TABLE IF NOT EXISTS events (
     evt_from TEXT NOT NULL,
     evt_to   TEXT NOT NULL,
     etp_id INTEGER NOT NULL,
-    FOREIGN KEY (etp_id) REFERENCES event_types(etp_id) ON DELETE CASCADE
+    epl_id INTEGER NOT NULL,
+    FOREIGN KEY (etp_id) REFERENCES event_types(etp_id) ON DELETE CASCADE,
+    FOREIGN KEY (epl_id) REFERENCES event_places(epl_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS event_links (
