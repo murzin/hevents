@@ -9,7 +9,7 @@ sub startup {
     # Configure database
     $self->helper(db => sub {
         state $db = EventsApp::Model::DB->new(
-            dsn => "dbi:SQLite:dbname=events.db",
+            dsn => "dbi:SQLite:dbname=db/hevents.db",
             username => "",
             password => ""
         );
