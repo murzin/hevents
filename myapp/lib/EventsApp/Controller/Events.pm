@@ -60,4 +60,25 @@ sub delete {
     $self->render(json => { success => 1 });
 }
 
+sub put {
+    my $self = shift;
+    my $data = $self->req->json;
+    my $sth = $self->db->dbh->prepare('
+        UPDATE events
+        SET evt_name = ?, evt_desc = ?, evt_url = ?, evt_from = ?, evt_to = ?, etp_id = ?, epl_id = ?
+        WHERE evt_id = ?
+    ');
+    $sth->execute(
+        $data->{evt_name},
+        $data->{evt_desc},
+        $data->{evt_url},
+        $data->{evt_from},
+        $data->{evt_to},
+        $data->{etp_id},
+        $data->{epl_id},
+        $self->param('id'),
+    );
+    $self->render(json => { success => 1 });
+}
+
 1;

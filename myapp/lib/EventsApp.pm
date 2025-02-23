@@ -45,6 +45,7 @@ sub startup {
     $api->post('/events')->to('events#create');
     $api->get('/events/:id')->to('events#get');
     $api->delete('/events/:id')->to('events#delete');
+    $api->put('/events/:id')->to('events#put');
     
     # Event Links
     $api->get('/event_links/:event_id')->to('event_links#list');
