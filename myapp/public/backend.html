@@ -7,37 +7,87 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
 </head>
-<body>
+<body class="bg-gray-50 antialiased">
     <div id="app">
         <div class="container mx-auto px-4 py-8">
             <!-- Error Alert -->
-            <div v-if="error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div v-if="error" class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {{ error }}
             </div>
 
             <!-- Navigation -->
-            <nav class="flex space-x-4 mb-8">
+            <nav class="mb-8 flex gap-3">
                 <button v-for="tab in tabs" 
                         :key="tab.value"
                         @click="activeTab = tab.value"
-                        :class="['px-4 py-2 rounded-md', 
-                                activeTab === tab.value ? 'bg-blue-600 text-white' : 'bg-gray-100']">
+                        :class="['px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200', 
+                                activeTab === tab.value ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100']">
                     {{ tab.label }}
                 </button>
             </nav>
 
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold">{{ getTabLabel(activeTab) }}</h1>
-                <button @click="openModal()"
-                        class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">
-                    Add New
-                </button>
+            <!-- Header and Controls -->
+            <div class="mb-6">
+                <div class="mb-6 flex items-center justify-between">
+                    <h1 class="text-2xl font-semibold text-gray-900">{{ getTabLabel(activeTab) }}</h1>
+                    <button @click="openModal()"
+                            class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors duration-200">
+                        Add New
+                    </button>
+                </div>
+
+                <!-- Search and Filter Controls -->
+                <div class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Search</label>
+                            <input v-model="searchQuery" 
+                                   @input="applyFilters"
+                                   placeholder="Search by name..."
+                                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150">
+                        </div>
+                        
+                        <div v-if="activeTab === 'events'">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Event Type</label>
+                            <select v-model="typeFilter" 
+                                    @change="applyFilters"
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150">
+                                <option value="">All Types</option>
+                                <option v-for="type in eventTypes" :value="type.etp_id" :key="type.etp_id">
+                                    {{ type.etp_name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div v-if="activeTab === 'events'">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Event Place</label>
+                            <select v-model="placeFilter" 
+                                    @change="applyFilters"
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150">
+                                <option value="">All Places</option>
+                                <option v-for="place in eventPlaces" :value="place.epl_id" :key="place.epl_id">
+                                    {{ place.epl_name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Items per page</label>
+                            <select v-model="itemsPerPage" 
+                                    @change="applyFilters"
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150">
+                                <option v-for="size in [5, 10, 20, 50]" :value="size" :key="size">
+                                    {{ size }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Data Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full">
+            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md">
+                <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -50,72 +100,102 @@
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="item in currentItems" :key="item.id">
-                            <td class="px-6 py-4 whitespace-nowrap">{{ item.evt_name || item.etp_name || item.epl_name }}</td>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="item in paginatedItems" :key="item.id" class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.evt_name || item.etp_name || item.epl_name }}</td>
                             <template v-if="activeTab === 'events'">
-                                <td class="px-6 py-4 whitespace-nowrap">{{ item.etp_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ item.epl_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(item.evt_from) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(item.evt_to) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.etp_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.epl_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_from) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_to) }}</td>
                             </template>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                 <button @click="openModal(item)"
-                                        class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        class="text-indigo-600 hover:text-indigo-800 mr-4 transition-colors duration-200">
                                     Edit
                                 </button>
                                 <button @click="deleteItem(item)"
-                                        class="text-red-600 hover:text-red-900">
+                                        class="text-red-600 hover:text-red-800 transition-colors duration-200">
                                     Delete
                                 </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-3">
+                    <div class="text-sm text-gray-700">
+                        Showing <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to 
+                        <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, filteredItems.length) }}</span> of 
+                        <span class="font-medium">{{ filteredItems.length }}</span> items
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="currentPage -= 1" 
+                                :disabled="currentPage === 1"
+                                class="rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200">
+                            Previous
+                        </button>
+                        <button v-for="page in totalPages" 
+                                :key="page"
+                                @click="currentPage = page"
+                                :class="['rounded-md border border-gray-300 px-3 py-1 text-sm transition-colors duration-200', 
+                                        currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100']">
+                            {{ page }}
+                        </button>
+                        <button @click="currentPage += 1" 
+                                :disabled="currentPage === totalPages"
+                                class="rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200">
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal -->
-            <div v-if="isModalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-                <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
-                    <h2 class="text-xl font-bold mb-6">
+            <div v-if="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+                <div class="w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-8 shadow-xl">
+                    <h2 class="mb-6 text-xl font-semibold text-gray-900">
                         {{ editingItem ? 'Edit' : 'Add' }} {{ getTabLabel(activeTab) }}
                     </h2>
                     <form @submit.prevent="submitForm">
-                        <!-- Common Fields -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium mb-1">Name</label>
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
                             <input type="text" v-model="formData.evt_name" 
-                                   class="w-full p-2 border rounded" required>
+                                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
+                                   required>
                         </div>
-
-                        <!-- Event-specific Fields -->
                         <template v-if="activeTab === 'events'">
                             <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">Description</label>
+                                <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
                                 <textarea v-model="formData.evt_desc" 
-                                          class="w-full p-2 border rounded"></textarea>
+                                          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150"></textarea>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">URL</label>
+                                <label class="mb-1 block text-sm font-medium text-gray-700">URL</label>
                                 <input type="url" v-model="formData.evt_url" 
-                                       class="w-full p-2 border rounded">
+                                       class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150">
                             </div>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="mb-4 grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">From</label>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">From</label>
                                     <input type="text" v-model="formData.evt_from" 
-                                           class="w-full p-2 border rounded" required>
+                                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
+                                           required>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">To</label>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">To</label>
                                     <input type="text" v-model="formData.evt_to" 
-                                           class="w-full p-2 border rounded" required>
+                                           class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
+                                           required>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="mb-4 grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">Event Type</label>
-                                    <select v-model="formData.etp_id" class="w-full p-2 border rounded" required>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">Event Type</label>
+                                    <select v-model="formData.etp_id" 
+                                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
+                                            required>
                                         <option value="">Select Type</option>
                                         <option v-for="type in eventTypes" :key="type.etp_id" :value="type.etp_id">
                                             {{ type.etp_name }}
@@ -123,8 +203,10 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">Event Place</label>
-                                    <select v-model="formData.epl_id" class="w-full p-2 border rounded" required>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">Event Place</label>
+                                    <select v-model="formData.epl_id" 
+                                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
+                                            required>
                                         <option value="">Select Place</option>
                                         <option v-for="place in eventPlaces" :key="place.epl_id" :value="place.epl_id">
                                             {{ place.epl_name }}
@@ -133,15 +215,13 @@
                                 </div>
                             </div>
                         </template>
-
-                        <!-- Form Actions -->
-                        <div class="flex justify-end space-x-2">
+                        <div class="flex justify-end gap-3">
                             <button type="button" @click="closeModal"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                    class="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200">
                                 Cancel
                             </button>
                             <button type="submit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                    class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors duration-200">
                                 Save
                             </button>
                         </div>
@@ -166,6 +246,12 @@
                 const isModalOpen = ref(false);
                 const editingItem = ref(null);
                 const formData = ref({});
+                
+                const searchQuery = ref('');
+                const typeFilter = ref('');
+                const placeFilter = ref('');
+                const itemsPerPage = ref(10);
+                const currentPage = ref(1);
 
                 const tabs = [
                     { value: 'events', label: 'Events' },
@@ -173,13 +259,46 @@
                     { value: 'event_places', label: 'Event Places' }
                 ];
 
-                const currentItems = computed(() => {
+                const allItems = computed(() => {
                     switch (activeTab.value) {
                         case 'events': return events.value;
                         case 'event_types': return eventTypes.value;
                         case 'event_places': return eventPlaces.value;
                         default: return [];
                     }
+                });
+
+                const filteredItems = computed(() => {
+                    let items = [...allItems.value];
+                    
+                    if (searchQuery.value) {
+                        const query = searchQuery.value.toLowerCase();
+                        items = items.filter(item => 
+                            (item.evt_name || item.etp_name || item.epl_name)
+                                .toLowerCase()
+                                .includes(query)
+                        );
+                    }
+
+                    if (activeTab.value === 'events' && typeFilter.value) {
+                        items = items.filter(item => item.etp_id === typeFilter.value);
+                    }
+
+                    if (activeTab.value === 'events' && placeFilter.value) {
+                        items = items.filter(item => item.epl_id === placeFilter.value);
+                    }
+
+                    return items;
+                });
+
+                const totalPages = computed(() => 
+                    Math.ceil(filteredItems.value.length / itemsPerPage.value)
+                );
+
+                const paginatedItems = computed(() => {
+                    const start = (currentPage.value - 1) * itemsPerPage.value;
+                    const end = start + itemsPerPage.value;
+                    return filteredItems.value.slice(start, end);
                 });
 
                 async function fetchData() {
@@ -193,6 +312,7 @@
                             case 'event_places': eventPlaces.value = data; break;
                         }
                         
+                        currentPage.value = 1;
                         error.value = null;
                     } catch (e) {
                         console.error('Error fetching data:', e);
@@ -217,6 +337,10 @@
                         console.error('Error fetching all data:', e);
                         error.value = 'Failed to load data';
                     }
+                }
+
+                function applyFilters() {
+                    currentPage.value = 1;
                 }
 
                 function openModal(item = null) {
@@ -278,10 +402,14 @@
                     return new Date(date).toLocaleString();
                 }
 
-                // Watch for tab changes
-                watch(activeTab, fetchData);
+                watch(activeTab, () => {
+                    fetchData();
+                    searchQuery.value = '';
+                    typeFilter.value = '';
+                    placeFilter.value = '';
+                    currentPage.value = 1;
+                });
 
-                // Initial data load
                 onMounted(fetchAllData);
 
                 return {
@@ -294,16 +422,24 @@
                     editingItem,
                     formData,
                     tabs,
-                    currentItems,
+                    searchQuery,
+                    typeFilter,
+                    placeFilter,
+                    itemsPerPage,
+                    currentPage,
+                    filteredItems,
+                    paginatedItems,
+                    totalPages,
                     openModal,
                     closeModal,
                     deleteItem,
                     submitForm,
                     getTabLabel,
-                    formatDate
+                    formatDate,
+                    applyFilters
                 };
             }
         }).mount('#app');
     </script>
 </body>
-</html>
+</html>                    
