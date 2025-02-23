@@ -1,8 +1,8 @@
-Collect information about Vermeer and organize it as a curl POST request to the REST api address  http://127.0.0.1:3000/api/events with JSON payload having fields:
+Collect information about Velasquez and organize it as a curl POST request to the REST api address  http://127.0.0.1:3000/api/events with JSON payload having fields:
 evt_name: his name
-evt_des: 10-12 words info about him
+evt_desc: 10-12 words info about him
 evt_url: link to wiki
 evt_from: date of birth in format YYYY-MM-DD, if found, if not - only year
 evt_to: date of death in format YYYY-MM-DD, if found, if not - only year
 etp_id: 1
-epl_id: 6
+epl_id: 4
