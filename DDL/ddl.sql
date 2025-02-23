@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS event_types (
     etp_name TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS event_places ((
+CREATE TABLE IF NOT EXISTS event_places (
     epl_id INTEGER PRIMARY KEY,
     epl_name TEXT NOT NULL
 );
