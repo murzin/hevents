@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Error Alert -->
+            <div v-if="error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                {{ error }}
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex space-x-4 mb-8">
+                <button v-for="tab in tabs" 
+                        :key="tab.value"
+                        @click="activeTab = tab.value"
+                        :class="['px-4 py-2 rounded-md', 
+                                activeTab === tab.value ? 'bg-blue-600 text-white' : 'bg-gray-100']">
+                    {{ tab.label }}
+                </button>
+            </nav>
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">{{ getTabLabel(activeTab) }}</h1>
+                <button @click="openModal()"
+                        class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">
+                    Add New
+                </button>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <template v-if="activeTab === 'events'">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Place</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
+                            </template>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-for="item in currentItems" :key="item.id">
+                            <td class="px-6 py-4 whitespace-nowrap">{{ item.evt_name || item.etp_name || item.epl_name }}</td>
+                            <template v-if="activeTab === 'events'">
+                                <td class="px-6 py-4 whitespace-nowrap">{{ item.etp_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ item.epl_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(item.evt_from) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(item.evt_to) }}</td>
+                            </template>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <button @click="openModal(item)"
+                                        class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                    Edit
+                                </button>
+                                <button @click="deleteItem(item)"
+                                        class="text-red-600 hover:text-red-900">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal -->
+            <div v-if="isModalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
+                    <h2 class="text-xl font-bold mb-6">
+                        {{ editingItem ? 'Edit' : 'Add' }} {{ getTabLabel(activeTab) }}
+                    </h2>
+                    <form @submit.prevent="submitForm">
+                        <!-- Common Fields -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-1">Name</label>
+                            <input type="text" v-model="formData.evt_name" 
+                                   class="w-full p-2 border rounded" required>
+                        </div>
+
+                        <!-- Event-specific Fields -->
+                        <template v-if="activeTab === 'events'">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-1">Description</label>
+                                <textarea v-model="formData.evt_desc" 
+                                          class="w-full p-2 border rounded"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-1">URL</label>
+                                <input type="url" v-model="formData.evt_url" 
+                                       class="w-full p-2 border rounded">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">From</label>
+                                    <input type="text" v-model="formData.evt_from" 
+                                           class="w-full p-2 border rounded" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">To</label>
+                                    <input type="text" v-model="formData.evt_to" 
+                                           class="w-full p-2 border rounded" required>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Event Type</label>
+                                    <select v-model="formData.etp_id" class="w-full p-2 border rounded" required>
+                                        <option value="">Select Type</option>
+                                        <option v-for="type in eventTypes" :key="type.etp_id" :value="type.etp_id">
+                                            {{ type.etp_name }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Event Place</label>
+                                    <select v-model="formData.epl_id" class="w-full p-2 border rounded" required>
+                                        <option value="">Select Place</option>
+                                        <option v-for="place in eventPlaces" :key="place.epl_id" :value="place.epl_id">
+                                            {{ place.epl_name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Form Actions -->
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" @click="closeModal"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_HOST = 'http://127.0.0.1:3000';
+
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                const error = ref(null);
+                const activeTab = ref('events');
+                const events = ref([]);
+                const eventTypes = ref([]);
+                const eventPlaces = ref([]);
+                const isModalOpen = ref(false);
+                const editingItem = ref(null);
+                const formData = ref({});
+
+                const tabs = [
+                    { value: 'events', label: 'Events' },
+                    { value: 'event_types', label: 'Event Types' },
+                    { value: 'event_places', label: 'Event Places' }
+                ];
+
+                const currentItems = computed(() => {
+                    switch (activeTab.value) {
+                        case 'events': return events.value;
+                        case 'event_types': return eventTypes.value;
+                        case 'event_places': return eventPlaces.value;
+                        default: return [];
+                    }
+                });
+
+                async function fetchData() {
+                    try {
+                        const response = await fetch(`${API_HOST}/api/${activeTab.value}`);
+                        const data = await response.json();
+                        
+                        switch(activeTab.value) {
+                            case 'events': events.value = data; break;
+                            case 'event_types': eventTypes.value = data; break;
+                            case 'event_places': eventPlaces.value = data; break;
+                        }
+                        
+                        error.value = null;
+                    } catch (e) {
+                        console.error('Error fetching data:', e);
+                        error.value = 'Failed to load data';
+                    }
+                }
+
+                async function fetchAllData() {
+                    try {
+                        const [eventsData, typesData, placesData] = await Promise.all([
+                            fetch(`${API_HOST}/api/events`).then(r => r.json()),
+                            fetch(`${API_HOST}/api/event_types`).then(r => r.json()),
+                            fetch(`${API_HOST}/api/event_places`).then(r => r.json())
+                        ]);
+                        
+                        events.value = eventsData;
+                        eventTypes.value = typesData;
+                        eventPlaces.value = placesData;
+                        
+                        error.value = null;
+                    } catch (e) {
+                        console.error('Error fetching all data:', e);
+                        error.value = 'Failed to load data';
+                    }
+                }
+
+                function openModal(item = null) {
+                    editingItem.value = item;
+                    formData.value = item ? { ...item } : {};
+                    isModalOpen.value = true;
+                }
+
+                function closeModal() {
+                    isModalOpen.value = false;
+                    editingItem.value = null;
+                    formData.value = {};
+                }
+
+                async function deleteItem(item) {
+                    if (!confirm('Are you sure you want to delete this item?')) return;
+
+                    const id = item.evt_id || item.etp_id || item.epl_id;
+                    try {
+                        await fetch(`${API_HOST}/api/${activeTab.value}/${id}`, {
+                            method: 'DELETE'
+                        });
+                        await fetchData();
+                        error.value = null;
+                    } catch (e) {
+                        console.error('Error deleting item:', e);
+                        error.value = 'Failed to delete item';
+                    }
+                }
+
+                async function submitForm() {
+                    try {
+                        const id = editingItem.value?.evt_id || editingItem.value?.etp_id || editingItem.value?.epl_id;
+                        const method = editingItem.value ? 'PUT' : 'POST';
+                        const url = `${API_HOST}/api/${activeTab.value}${id ? `/${id}` : ''}`;
+
+                        await fetch(url, {
+                            method,
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(formData.value)
+                        });
+
+                        await fetchData();
+                        closeModal();
+                        error.value = null;
+                    } catch (e) {
+                        console.error('Error submitting form:', e);
+                        error.value = 'Failed to save data';
+                    }
+                }
+
+                function getTabLabel(tab) {
+                    return tabs.find(t => t.value === tab)?.label || '';
+                }
+
+                function formatDate(date) {
+                    return new Date(date).toLocaleString();
+                }
+
+                // Watch for tab changes
+                watch(activeTab, fetchData);
+
+                // Initial data load
+                onMounted(fetchAllData);
+
+                return {
+                    error,
+                    activeTab,
+                    events,
+                    eventTypes,
+                    eventPlaces,
+                    isModalOpen,
+                    editingItem,
+                    formData,
+                    tabs,
+                    currentItems,
+                    openModal,
+                    closeModal,
+                    deleteItem,
+                    submitForm,
+                    getTabLabel,
+                    formatDate
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
