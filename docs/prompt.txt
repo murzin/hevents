@@ -6,3 +6,26 @@ evt_from: date of birth in format YYYY-MM-DD, if found, if not - only year
 evt_to: date of death in format YYYY-MM-DD, if found, if not - only year
 etp_id: 9
 epl_id: 13
+
+10|Artist                   1|Italy                                              
+20|Sculptors                2|France
+30|Writers                  3|Germany
+40|Poets                    4|Spain
+45|Composers                5|England
+50|Philosophers             6|Netherlands
+60|Scientists               7|Greece
+70|Rulers                   8|India
+80|Commanders               9|China
+90|Pioneers                 10|Mongol
+100|Celebrities             11|America
+110|Paintings               12|Russia
+120|Sculptures              13|Portugal
+130|Books                   14|Persia
+135|Music
+140|Sci discoveries
+150|Geo discoveries
+160|Polit events
+170|Empires
+180|Wars
+190|Battels
+
