@@ -1,230 +1,198 @@
-# Events Management API Documentation
+# Events API Documentation
 
-## Base URL
-`http://localhost:3000/api`
+This documentation describes the REST API endpoints for managing events, event types, event places, and event links.
 
-## Event Types Endpoints
+## Base Endpoints
 
-### List Event Types
-- **GET** `/event_types`
-- Returns array of all event types
-- Response format:
-```json
-[
-  {
-    "etp_id": 1,
-    "etp_name": "Conference"
-  }
-]
-```
+### Events
 
-### Get Single Event Type
-- **GET** `/event_types/{id}`
-- Returns single event type
-- Response format:
-```json
-{
-  "etp_id": 1,
-  "etp_name": "Conference"
-}
-```
+#### List All Events
+- **GET** `/events`
+- **Description**: Retrieves all events with their associated type and place information
+- **Response**: Array of event objects with the following fields:
+  - `evt_id`: Event ID
+  - `evt_name`: Event name (UTF-8 encoded)
+  - `evt_desc`: Event description
+  - `evt_url`: Event URL
+  - `evt_from`: Start date/time
+  - `evt_to`: End date/time
+  - `etp_id`: Event type ID
+  - `epl_id`: Event place ID
+  - `etp_name`: Event type name
+  - `epl_name`: Event place name
 
-### Create Event Type
-- **POST** `/event_types`
-- Request body:
-```json
-{
-  "etp_name": "Conference"
-}
-```
-- Returns created event type with ID
-
-### Update Event Type
-- **PUT** `/event_types/{id}`
-- Request body:
-```json
-{
-  "etp_name": "Updated Conference"
-}
-```
-- Returns updated event type
-
-### Delete Event Type
-- **DELETE** `/event_types/{id}`
-- Returns success message
-- Note: Will delete all associated events (cascade delete)
-
-## Events Endpoints
-
-### List Events
-- **GET** `/events/list`
-- Optional URL query parameters:
-  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
-  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
-
-- **POST** `/events/list`
-- Optional URL query parameters:
-  - `from`: Filter events starting on or after this date (format: YYYY-MM-DD)
-  - `to`: Filter events ending on or before this date (format: YYYY-MM-DD)
-- Optional request body:
-```json
-{
-    "evt_id": 1    // Single event ID
-}
-```
-or
-```json
-{
-    "evt_id": [1, 2, 3]    // Array of event IDs
-}
-```
-- Response format:
-```json
-[
-  {
-    "evt_id": 1,
-    "evt_name": "Annual Conference",
-    "evt_desc": "Annual tech conference with keynotes",
-    "evt_url": "https://conference.example.com",
-    "evt_from": "2025-06-01",
-    "evt_to": "2025-06-03",
-    "etp_id": 1,
-    "etp_name": "Conference"
-  }
-]
-```
-
-### Usage Examples
-
-1. Get all events (no filters):
-```bash
-curl -X POST "http://localhost:3000/api/events/list"
-```
-
-2. Get specific events by ID:
-```bash
-curl -X POST "http://localhost:3000/api/events/list" \
-  -H "Content-Type: application/json" \
-  -d '{"evt_id": [1, 2, 3]}'
-```
-
-3. Get single event by ID:
-```bash
-curl -X POST "http://localhost:3000/api/events/list" \
-  -H "Content-Type: application/json" \
-  -d '{"evt_id": 1}'
-```
-
-4. Combine ID and date filters:
-```bash
-curl -X POST "http://localhost:3000/api/events/list?from=2025-01-01&to=2025-12-31" \
-  -H "Content-Type: application/json" \
-  -d '{"evt_id": [1, 2, 3]}'
-```
-### Notes
-- All filters are optional
-- Events are ordered by start date and event ID
-- Date filters can be combined with event ID filters
-- Event ID can be either a single integer or an array of integers
-
-### Get Single Event
-- **GET** `/events/{id}`
-- Returns single event with event type name and linked events
-- Response format:
-```json
-{
-  "evt_id": 1,
-  "evt_name": "Annual Conference",
-  "evt_desc": "Annual tech conference with keynotes",
-  "evt_url": "https://conference.example.com",
-  "evt_from": "2025-06-01",
-  "evt_to": "2025-06-03",
-  "etp_id": 1,
-  "etp_name": "Conference",
-  "linked_events": [
-    {
-      "evt_id": 2,
-      "evt_name": "Workshop Day",
-      "evt_desc": "Pre-conference workshop",
-      "evt_url": "https://workshop.example.com",
-      "evt_from": "2025-05-31",
-      "evt_to": "2025-05-31",
-      "etp_id": 2
-    }
-  ]
-}
-```
-
-### Create Event
+#### Create Event
 - **POST** `/events`
-- Request body:
+- **Description**: Creates a new event
+- **Request Body**:
 ```json
 {
-  "evt_name": "Annual Conference",
-  "evt_desc": "Annual tech conference with keynotes",
-  "evt_url": "https://conference.example.com",
-  "evt_from": "2025-06-01",
-  "evt_to": "2025-06-03",
-  "etp_id": 1
+    "evt_name": "string",
+    "evt_desc": "string",
+    "evt_url": "string",
+    "evt_from": "datetime",
+    "evt_to": "datetime",
+    "etp_id": "integer",
+    "epl_id": "integer"
 }
 ```
-- Returns created event with ID
+- **Response**: `{ "id": "integer" }`
 
-### Update Event
-- **PUT** `/events/{id}`
-- Request body format same as create
-- Returns updated event
+#### Get Event
+- **GET** `/events/:id`
+- **Description**: Retrieves a specific event by ID with type and place information
+- **Parameters**: 
+  - `id`: Event ID
+- **Response**: Single event object or empty object if not found
 
-### Delete Event
-- **DELETE** `/events/{id}`
-- Returns success message
+#### Update Event
+- **PUT** `/events/:id`
+- **Description**: Updates an existing event
+- **Parameters**:
+  - `id`: Event ID
+- **Request Body**: Same as Create Event
+- **Response**: `{ "success": 1 }`
 
-## Event Links Endpoints
+#### Delete Event
+- **DELETE** `/events/:id`
+- **Description**: Deletes an event
+- **Parameters**:
+  - `id`: Event ID
+- **Response**: `{ "success": 1 }`
 
-### List Event Links
-- **GET** `/events/{id}/links`
-- Returns all events linked to the specified event
-- Returns array of linked event objects
+### Event Types
 
-### Add Event Link
-- **POST** `/events/{id}/links/{target_id}`
-- Creates a link between two events
-- No request body needed
-- Returns success message
+#### List Event Types
+- **GET** `/event_types`
+- **Description**: Retrieves all event types
+- **Response**: Array of event type objects
 
-### Remove Event Link
-- **DELETE** `/events/{id}/links/{target_id}`
-- Removes link between two events
-- Returns success message
-
-
-## Response Status Codes
-- 200: Success
-- 201: Created (for POST requests)
-- 400: Bad Request (invalid input)
-- 404: Not Found
-- 500: Server Error
-
-## Data Types
-- evt_id: Integer (auto-generated)
-- evt_name: Text (required)
-- evt_desc: Text (optional)
-- evt_url: Text (optional)
-- evt_from: Text (required, date format YYYY-MM-DD)
-- evt_to: Text (required, date format YYYY-MM-DD)
-- etp_id: Integer (required, must reference valid event type)
-- etp_name: Text (required for event types)
-
-## Error Response Format
+#### Create Event Type
+- **POST** `/event_types`
+- **Description**: Creates a new event type
+- **Request Body**:
 ```json
 {
-  "error": "Error message description"
+    "etp_name": "string"
 }
 ```
-## Data Structure
+- **Response**: `{ "id": "integer" }`
 
-### Event Links Table
-Simple many-to-many relationship table with two columns:
-- evt_id_1: First event ID (smaller ID of the pair)
-- evt_id_2: Second event ID (larger ID of the pair)
-- Primary key is (evt_id_1, evt_id_2)
+#### Get Event Type
+- **GET** `/event_types/:id`
+- **Description**: Retrieves a specific event type
+- **Parameters**:
+  - `id`: Event type ID
+- **Response**: Event type object or empty object if not found
+
+#### Delete Event Type
+- **DELETE** `/event_types/:id`
+- **Description**: Deletes an event type
+- **Parameters**:
+  - `id`: Event type ID
+- **Response**: `{ "success": 1 }`
+
+### Event Places
+
+#### List Event Places
+- **GET** `/event_places`
+- **Description**: Retrieves all event places
+- **Response**: Array of event place objects
+
+#### Create Event Place
+- **POST** `/event_places`
+- **Description**: Creates a new event place
+- **Request Body**:
+```json
+{
+    "epl_name": "string"
+}
+```
+- **Response**: `{ "id": "integer" }`
+
+#### Get Event Place
+- **GET** `/event_places/:id`
+- **Description**: Retrieves a specific event place
+- **Parameters**:
+  - `id`: Event place ID
+- **Response**: Event place object or empty object if not found
+
+#### Delete Event Place
+- **DELETE** `/event_places/:id`
+- **Description**: Deletes an event place
+- **Parameters**:
+  - `id`: Event place ID
+- **Response**: `{ "success": 1 }`
+
+### Event Links
+
+#### List Linked Events
+- **GET** `/event_links/:event_id`
+- **Description**: Retrieves all events linked to the specified event
+- **Parameters**:
+  - `event_id`: Event ID
+- **Response**: Array of linked event objects
+
+#### Create Event Link
+- **POST** `/event_links`
+- **Description**: Creates a link between two events
+- **Request Body**:
+```json
+{
+    "evt_id_1": "integer",
+    "evt_id_2": "integer"
+}
+```
+- **Response**: `{ "success": 1 }`
+
+#### Delete Event Link
+- **DELETE** `/event_links`
+- **Description**: Removes a link between two events
+- **Request Body**:
+```json
+{
+    "evt_id_1": "integer",
+    "evt_id_2": "integer"
+}
+```
+- **Response**: `{ "success": 1 }`
+
+## Data Models
+
+### Event
+```
+{
+    evt_id: integer      // Event ID
+    evt_name: string     // Event name
+    evt_desc: string     // Event description
+    evt_url: string      // Event URL
+    evt_from: datetime   // Start date/time
+    evt_to: datetime     // End date/time
+    etp_id: integer     // Event type ID
+    epl_id: integer     // Event place ID
+    etp_name: string    // Event type name
+    epl_name: string    // Event place name
+}
+```
+
+### Event Type
+```
+{
+    etp_id: integer     // Event type ID
+    etp_name: string    // Event type name
+}
+```
+
+### Event Place
+```
+{
+    epl_id: integer     // Event place ID
+    epl_name: string    // Event place name
+}
+```
+
+## Notes
+- All responses are in JSON format
+- Date/time fields should be provided in a format compatible with your database
+- Success responses include either the new record ID or a success flag
+- UTF-8 encoding is used for event names
