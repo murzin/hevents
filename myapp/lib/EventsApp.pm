@@ -6,13 +6,6 @@ use EventsApp::Model::DB;
 sub startup {
     my $self = shift;
 
-    # Serve static files from "public/" automatically
-    $self->routes->get('/backend' => sub {
-        my $c = shift;
-        $c->reply->static('backend.html');
-    });
-
-
     # Configure database
     $self->helper(db => sub {
         state $db = EventsApp::Model::DB->new(
@@ -25,6 +18,12 @@ sub startup {
     # Configure routes
     my $r = $self->routes;
     
+    # Serve static files from "public/" automatically
+    $r->get('/backend' => sub {
+        my $c = shift;
+        $c->reply->static('backend.html');
+    });
+
     # API routes
     my $api = $r->under('/api');
     
