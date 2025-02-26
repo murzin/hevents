@@ -106,8 +106,10 @@
                             <template v-if="activeTab === 'events'">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.etp_name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.epl_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_from) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_to) }}</td>
+                                <!-- td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_from) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(item.evt_to) }}</td -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.evt_from }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.evt_to }}</td>
                             </template>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                 <button @click="openModal(item)"

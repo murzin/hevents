@@ -14,7 +14,11 @@ sub list {
 
     #$self->render(json => $sth->fetchall_arrayref({}));
     my $arr = $sth->fetchall_arrayref({});
-    $_->{evt_name} = decode_utf8($_->{evt_name}) for @$arr;
+    for (@$arr) {
+        $_->{evt_name} = decode_utf8($_->{evt_name});
+        $_->{evt_from} = substr($_->{evt_from}, 0, 4);
+        $_->{evt_to} = substr($_->{evt_to}, 0, 4);
+    }
     $self->render(json => $arr);
 
 }
