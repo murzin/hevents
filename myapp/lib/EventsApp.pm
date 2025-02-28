@@ -19,6 +19,10 @@ sub startup {
     my $r = $self->routes;
     
     # Serve static files from "public/" automatically
+    $r->get('/' => sub {
+        my $c = shift;
+        $c->reply->static('index.html');
+    });
     $r->get('/backend' => sub {
         my $c = shift;
         $c->reply->static('backend.html');
