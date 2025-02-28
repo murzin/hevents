@@ -3,27 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>People and Events</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Full Width Layout</title>
     <style>
-        /* Custom style for timeline height */
-        .event-timeline div {
-            height: 10px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+
+        #headBlock {
+            background-color: #f0f0f0;
+        }
+
+        #menuBlock {
+            background-color: #e0e0e0;
+            vertical-align: top;
+        }
+
+        #workBlock {
+            vertical-align: top;
+        }
+
+        #footerBlock {
+            text-align: center;
+        }
+
+        .event-row {
+            position: relative;
         }
     </style>
 </head>
-<body onload="main()" class="bg-gradient-to-br from-blue-50 to-gray-100 h-screen w-screen font-sans antialiased">
-    <table class="w-full h-full border-collapse">
+<body onload="main()">
+    <table>
         <tr>
-            <td id="headBlock" colspan="2" class="h-[10%] bg-white shadow-md"></td>
+            <td id="headBlock" colspan="2" style="height: 10%;"></td>
         </tr>
         <tr>
-            <td id="menuBlock" class="w-1/5 h-[80%] bg-white shadow-md align-top"></td>
-            <td id="workBlock" class="w-4/5 h-[80%] bg-white shadow-md align-top"></td>
+            <td id="menuBlock" style="width: 20%; height: 80%;"></td>
+            <td id="workBlock" style="width: 80%; height: 80%;"></td>
         </tr>
         <tr>
-            <td id="footerBlock" colspan="2" class="h-[10%] bg-white shadow-md text-center"></td>
+            <td id="footerBlock" colspan="2" style="height: 10%;"></td>
         </tr>
     </table>
 
@@ -62,32 +93,45 @@
         function getEventsREST() {
             fetch(API_HOST + API_EVENTS, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
-            .then(data => storeToDb(data))
+            .then(data => {
+                storeToDb(data);
+            })
             .catch(error => console.error('Error fetching events:', error));
         }
 
         function getEventTypesREST() {
             fetch(API_HOST + API_EVENTTYPES, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
-            .then(data => localStorage.setItem('event_types', JSON.stringify(data)))
+            .then(data => {
+                localStorage.setItem('event_types', JSON.stringify(data));
+            })
             .catch(error => console.error('Error fetching event types:', error));
         }
 
         function getEventPlacesREST() {
             fetch(API_HOST + API_EVENTPLACES, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
-            .then(data => localStorage.setItem('event_places', JSON.stringify(data)))
+            .then(data => {
+                localStorage.setItem('event_places', JSON.stringify(data));
+            })
             .catch(error => console.error('Error fetching event places:', error));
         }
+
         function storeToDb(eventsArray) {
             const request = indexedDB.open('EventsDB', 1);
 
@@ -101,8 +145,12 @@
                 const transaction = db.transaction(['events'], 'readwrite');
                 const store = transaction.objectStore('events');
                 
-                store.clear().onsuccess = function() {
-                    eventsArray.forEach(event => store.add(event));
+                const clearRequest = store.clear();
+                
+                clearRequest.onsuccess = function() {
+                    eventsArray.forEach(event => {
+                        store.add(event);
+                    });
                 };
 
                 transaction.oncomplete = function() {
@@ -166,25 +214,27 @@
         }
 
         function isFirstTime() {
-            return !(localStorage.getItem('etp_ids') && localStorage.getItem('epl_ids'));
+            if (localStorage.getItem('etp_ids') && localStorage.getItem('epl_ids')) {
+                return false;
+            }
+            return true;
         }
 
         function createTypesCheckboxes() {
-            let html = '<h3 class="text-lg font-medium text-blue-900">Event Types</h3>';
+            let html = '<h3>Event Types</h3>';
             const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
             
             if (eventTypes.length === 0) {
-                html += '<p class="text-gray-500 text-sm">No event types available</p>';
+                html += '<p>No event types available</p>';
             } else {
-                html += '<ul class="mt-2 space-y-3">';
+                html += '<ul>';
                 eventTypes.forEach(type => {
                     const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
                     html += `
-                        <li class="flex items-center">
+                        <li>
                             <input type="checkbox" id="type_${type.etp_id}" ${isChecked}
-                                onchange="toggleEventType('${type.etp_id}', this.checked)"
-                                class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <label for="type_${type.etp_id}" class="ml-3 text-gray-700">${type.etp_name || 'Unnamed Type'}</label>
+                                onchange="toggleEventType('${type.etp_id}', this.checked)">
+                            <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
                         </li>
                     `;
                 });
@@ -194,21 +244,20 @@
         }
 
         function createPlaceCheckboxes() {
-            let html = '<h3 class="text-lg font-medium text-blue-900">Event Places</h3>';
+            let html = '<h3>Event Places</h3>';
             const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
             
             if (eventPlaces.length === 0) {
-                html += '<p class="text-gray-500 text-sm">No event places available</p>';
+                html += '<p>No event places available</p>';
             } else {
-                html += '<ul class="mt-2 space-y-3">';
+                html += '<ul>';
                 eventPlaces.forEach(place => {
                     const isChecked = epl_ids.includes(place.epl_id) ? 'checked' : '';
                     html += `
-                        <li class="flex items-center">
+                        <li>
                             <input type="checkbox" id="place_${place.epl_id}" ${isChecked}
-                                onchange="toggleEventPlace('${place.epl_id}', this.checked)"
-                                class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <label for="place_${place.epl_id}" class="ml-3 text-gray-700">${place.epl_name || 'Unnamed Place'}</label>
+                                onchange="toggleEventPlace('${place.epl_id}', this.checked)">
+                            <label for="place_${place.epl_id}">${place.epl_name || 'Unnamed Place'}</label>
                         </li>
                     `;
                 });
@@ -271,31 +320,31 @@
 
         function Head() {
             return `
-                <h1 class="text-3xl font-bold text-blue-900 text-center py-2 tracking-tight">People and Events</h1>
+                <h1>People and Events</h1>
             `;
         }
 
         function Menu() {
             return `
-                <div class="p-6">
-                    <button onclick="getAllREST()" class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">Reload Events</button>
-                    <div class="mt-6 grid grid-cols-2 gap-6">
-                        <div>${createTypesCheckboxes()}</div>
-                        <div>${createPlaceCheckboxes()}</div>
-                    </div>
+                <button onclick="getAllREST()">Reload Events</button>
+                <br><br>
+                <div class="menu-columns">
+                    <div class="menu-column">${createTypesCheckboxes()}</div>
+                    <div class="menu-column">${createPlaceCheckboxes()}</div>
                 </div>
             `;
         }
 
         function Work() {
-            let html = '<div class="p-6">';
+            let html = '';
             if (events.length === 0) {
-                html += '<h2 class="text-2xl font-semibold text-blue-900">Events</h2><p class="text-gray-500 mt-2">No events available</p>';
+                html = '<h2>Events</h2><p>No events available</p>';
             } else {
                 const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
                 const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
-                html += `<h2 class="text-2xl font-semibold text-blue-900">Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
-                html += '<div class="mt-4 space-y-6">';
+                html = `<h2>Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
+                html += '<div>';
+
                 const totalDuration = new Date(maxTo) - new Date(minFrom);
 
                 events.forEach(event => {
@@ -305,29 +354,28 @@
                     const durationPercent = ((endOffset - startOffset) / totalDuration) * 100;
 
                     html += `
-                        <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''} flex justify-between items-center bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200">
-                            <span class="text-gray-800 font-medium">${event.evt_name || 'Unnamed Event'}</span>
-                            <span class="text-gray-600 text-sm">From: ${event.evt_from || 'N/A'}</span>
-                            <span class="text-gray-600 text-sm">To: ${event.evt_to || 'N/A'}</span>
+                        <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}">
+                            <span>${event.evt_name || 'Unnamed Event'}</span>
+                            <span>From: ${event.evt_from || 'N/A'}</span>
+                            <span>To: ${event.evt_to || 'N/A'}</span>
                         </div>
-                        <div class="event-timeline etp_id${event.etp_id || ''} epl_id${event.epl_id || ''} flex w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div class="event-timeline etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}" style="display: flex; width: 100%; height: 10px;">
                             <div style="width: ${startPercent}%;"></div>
-                            <div style="width: ${durationPercent}%;" class="bg-red-600"></div>
+                            <div style="width: ${durationPercent}%; background-color: red;"></div>
                             <div style="width: ${100 - startPercent - durationPercent}%;"></div>
                         </div>
                     `;
                 });
                 html += '</div>';
             }
-            html += '</div>';
             return html;
         }
 
         function Footer() {
             return `
-                <small class="text-gray-400 text-sm">work in progress..</small>
+                <small>work in progress..</small>
             `;
         }
     </script>
-</body>
+    </body>
 </html>
