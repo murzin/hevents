@@ -52,6 +52,15 @@
         .event-row {
             position: relative;
         }
+
+        .menu-columns {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .menu-column {
+            width: 48%;
+        }
     </style>
 </head>
 <body onload="main()">
@@ -222,53 +231,103 @@
             return true;
         }
 
-function createTypesCheckboxes() {
-    let html = '<h3>Event Types</h3>';
-    const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
-
-    if (eventTypes.length === 0) {
-        html += '<p>No event types available</p>';
-    } else {
-        html += '<ul>';
-        eventTypes.forEach(type => {
-            const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
-            html += `
-                <li>
-                    <input type="checkbox" id="type_${type.etp_id}" ${isChecked}
-                        onchange="toggleEventType('${type.etp_id}', this.checked)">
-                    <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
-                </li>
-            `;
-        });
-        html += '</ul>';
-    }
-    return html;
-}
-function toggleEventType(typeId, isChecked) {
-    const numericTypeId = Number(typeId);
-    let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
-    
-    if (isChecked) {
-        if (!currentEtpIds.includes(numericTypeId)) {
-            currentEtpIds.push(numericTypeId);
-            localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
-            updatePageTypesPlaces();
-            updatePageEvents();
+        function createTypesCheckboxes() {
+            let html = '<h3>Event Types</h3>';
+            const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+            
+            if (eventTypes.length === 0) {
+                html += '<p>No event types available</p>';
+            } else {
+                html += '<ul>';
+                eventTypes.forEach(type => {
+                    const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
+                    html += `
+                        <li>
+                            <input type="checkbox" id="type_${type.etp_id}" ${isChecked}
+                                onchange="toggleEventType('${type.etp_id}', this.checked)">
+                            <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            }
+            return html;
         }
-    } else {
-        currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
-        localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
-    }
 
-    const rows = document.querySelectorAll(`.etp_id${numericTypeId}`);
-    rows.forEach(row => {
-        row.style.display = isChecked ? 'flex' : 'none';
-    });
-    const timelines = document.querySelectorAll(`.etp_id${numericTypeId}`);
-    timelines.forEach(timeline => {
-        timeline.style.display = isChecked ? 'flex' : 'none';
-    });
-}
+        function createPlaceCheckboxes() {
+            let html = '<h3>Event Places</h3>';
+            const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
+            
+            if (eventPlaces.length === 0) {
+                html += '<p>No event places available</p>';
+            } else {
+                html += '<ul>';
+                eventPlaces.forEach(place => {
+                    const isChecked = epl_ids.includes(place.epl_id) ? 'checked' : '';
+                    html += `
+                        <li>
+                            <input type="checkbox" id="place_${place.epl_id}" ${isChecked}
+                                onchange="toggleEventPlace('${place.epl_id}', this.checked)">
+                            <label for="place_${place.epl_id}">${place.epl_name || 'Unnamed Place'}</label>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            }
+            return html;
+        }
+
+        function toggleEventType(typeId, isChecked) {
+            const numericTypeId = Number(typeId);
+            let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
+            
+            if (isChecked) {
+                if (!currentEtpIds.includes(numericTypeId)) {
+                    currentEtpIds.push(numericTypeId);
+                    localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
+                    updatePageTypesPlaces();
+                    updatePageEvents();
+                }
+            } else {
+                currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
+                localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
+            }
+
+            const rows = document.querySelectorAll(`.etp_id${numericTypeId}`);
+            rows.forEach(row => {
+                row.style.display = isChecked ? 'flex' : 'none';
+            });
+            const timelines = document.querySelectorAll(`.etp_id${numericTypeId}`);
+            timelines.forEach(timeline => {
+                timeline.style.display = isChecked ? 'flex' : 'none';
+            });
+        }
+
+        function toggleEventPlace(placeId, isChecked) {
+            const numericPlaceId = Number(placeId);
+            let currentEplIds = JSON.parse(localStorage.getItem('epl_ids') || '[]');
+            
+            if (isChecked) {
+                if (!currentEplIds.includes(numericPlaceId)) {
+                    currentEplIds.push(numericPlaceId);
+                    localStorage.setItem('epl_ids', JSON.stringify([...new Set(currentEplIds)]));
+                    updatePageTypesPlaces();
+                    updatePageEvents();
+                }
+            } else {
+                currentEplIds = currentEplIds.filter(id => id !== numericPlaceId);
+                localStorage.setItem('epl_ids', JSON.stringify(currentEplIds));
+            }
+
+            const rows = document.querySelectorAll(`.epl_id${numericPlaceId}`);
+            rows.forEach(row => {
+                row.style.display = isChecked ? 'flex' : 'none';
+            });
+            const timelines = document.querySelectorAll(`.epl_id${numericPlaceId}`);
+            timelines.forEach(timeline => {
+                timeline.style.display = isChecked ? 'flex' : 'none';
+            });
+        }
 
         function Head() {
             return `
@@ -281,7 +340,10 @@ function toggleEventType(typeId, isChecked) {
             return `
                 <button onclick="getAllREST()">Reload Events</button>
                 <br><br>
-                ${createTypesCheckboxes()}
+                <div class="menu-columns">
+                    <div class="menu-column">${createTypesCheckboxes()}</div>
+                    <div class="menu-column">${createPlaceCheckboxes()}</div>
+                </div>
             `;
         }
 
