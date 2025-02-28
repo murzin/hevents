@@ -20,12 +20,12 @@
             width: 100%;
             height: 20%;
             background-color: #f0f0f0;
-            margin: 10px; /* Added margin */
+            margin: 10px;
         }
 
         #container {
             width: 100%;
-            height: 80%;
+            height: 70%; /* Adjusted height to accommodate footer */
             display: flex;
             flex-direction: row;
         }
@@ -34,13 +34,19 @@
             width: 20%;
             height: 100%;
             background-color: #e0e0e0;
-            margin: 10px; /* Added margin */
+            margin: 10px;
         }
 
         #workBlock {
             width: 80%;
             height: 100%;
-            margin: 10px; /* Added margin */
+            margin: 10px;
+        }
+
+        #footerBlock {
+            width: 100%;
+            height: 10%; /* Added footer height */
+            margin: 10px; /* Added margin for consistency */
         }
 
         .event-row {
@@ -54,7 +60,7 @@
         <div id="menuBlock"></div>
         <div id="workBlock"></div>
     </div>
-
+    <div id="footerBlock"></div> <!-- Added empty footer -->
     <script>
         const API_HOST = 'http://127.0.0.1:3000';
         const API_EVENTS = '/api/events';
@@ -228,6 +234,7 @@
                 <button onclick="getAllREST()">Reload Events</button>
             `;
         }
+
         function Work() {
             let html = '';
             if (events.length === 0) {

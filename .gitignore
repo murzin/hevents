@@ -1,1 +1,4 @@
 myapp/db/hevents.*
+docs/prompt.txt
+docs/frontend-prompts.md
+myapp/public/index_*
