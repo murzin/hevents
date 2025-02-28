@@ -20,6 +20,7 @@
             width: 100%;
             height: 20%;
             background-color: #f0f0f0;
+            margin: 10px; /* Added margin */
         }
 
         #container {
@@ -33,12 +34,15 @@
             width: 20%;
             height: 100%;
             background-color: #e0e0e0;
+            margin: 10px; /* Added margin */
         }
 
         #workBlock {
             width: 80%;
             height: 100%;
+            margin: 10px; /* Added margin */
         }
+
         .event-row {
             position: relative;
         }
@@ -195,7 +199,6 @@
                         epl_ids.includes(event.epl_id)
                     );
                     db.close();
-                    // Update the Work block after events are loaded
                     document.getElementById('workBlock').innerHTML = Work();
                 };
             };
@@ -225,50 +228,41 @@
                 <button onclick="getAllREST()">Reload Events</button>
             `;
         }
+        function Work() {
+            let html = '';
+            if (events.length === 0) {
+                html = '<h2>Events</h2><p>No events available</p>';
+            } else {
+                const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
+                const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
+                html = `<h2>Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
+                html += '<div>';
 
-    function Work() {
-    let html = '';
-    if (events.length === 0) {
-        html = '<h2>Events</h2><p>No events available</p>';
-    } else {
-        const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
-        const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
-        html = `<h2>Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
-        html += '<div>';
+                const totalDuration = new Date(maxTo) - new Date(minFrom);
 
-        // Calculate total duration in milliseconds (assuming evt_from and evt_to are ISO strings or comparable)
-        const totalDuration = new Date(maxTo) - new Date(minFrom);
+                events.forEach(event => {
+                    const startOffset = new Date(event.evt_from) - new Date(minFrom);
+                    const endOffset = new Date(event.evt_to) - new Date(minFrom);
+                    const startPercent = (startOffset / totalDuration) * 100;
+                    const durationPercent = ((endOffset - startOffset) / totalDuration) * 100;
 
-        events.forEach(event => {
-            const startOffset = new Date(event.evt_from) - new Date(minFrom);
-            const endOffset = new Date(event.evt_to) - new Date(minFrom);
-            const startPercent = Math.floor((startOffset / totalDuration) * 100);
-            const durationPercent = Math.floor(((endOffset - startOffset) / totalDuration) * 100);
-
-            html += `
-                <div class="event-row">
-                    <div style="
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: linear-gradient(to right,
-                            transparent ${startPercent}%,
-                            #add8e6 ${startPercent}%, #add8e6 ${startPercent + durationPercent}%,
-                            transparent ${startPercent + durationPercent}%
-                            );
-                        z-index: -1;
-                    "></div>
-                    ${event.evt_name || 'Unnamed Event'}&nbsp;&nbsp;
-                    ${event.evt_from || 'N/A'}&nbsp;-&nbsp;${event.evt_to || 'N/A'}
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-    return html;
-}
+                    html += `
+                        <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}">
+                            <span>${event.evt_name || 'Unnamed Event'}</span>
+                            <span>From: ${event.evt_from || 'N/A'}</span>
+                            <span>To: ${event.evt_to || 'N/A'}</span>
+                        </div>
+                        <div class="event-timeline etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}" style="display: flex; width: 100%; height: 10px;">
+                            <div style="width: ${startPercent}%;"></div>
+                            <div style="width: ${durationPercent}%; background-color: red;"></div>
+                            <div style="width: ${100 - startPercent - durationPercent}%;"></div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            return html;
+        }
     </script>
 </body>
 </html>
