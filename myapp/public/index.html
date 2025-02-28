@@ -25,7 +25,7 @@
 
         #container {
             width: 100%;
-            height: 70%; /* Adjusted height to accommodate footer */
+            height: 70%;
             display: flex;
             flex-direction: row;
         }
@@ -45,8 +45,8 @@
 
         #footerBlock {
             width: 100%;
-            height: 10%; /* Added footer height */
-            margin: 10px; /* Added margin for consistency */
+            height: 10%;
+            margin: 10px;
         }
 
         .event-row {
@@ -60,7 +60,7 @@
         <div id="menuBlock"></div>
         <div id="workBlock"></div>
     </div>
-    <div id="footerBlock"></div> <!-- Added empty footer -->
+    <div id="footerBlock"></div>
     <script>
         const API_HOST = 'http://127.0.0.1:3000';
         const API_EVENTS = '/api/events';
@@ -222,6 +222,54 @@
             return true;
         }
 
+function createTypesCheckboxes() {
+    let html = '<h3>Event Types</h3>';
+    const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+
+    if (eventTypes.length === 0) {
+        html += '<p>No event types available</p>';
+    } else {
+        html += '<ul>';
+        eventTypes.forEach(type => {
+            const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
+            html += `
+                <li>
+                    <input type="checkbox" id="type_${type.etp_id}" ${isChecked}
+                        onchange="toggleEventType('${type.etp_id}', this.checked)">
+                    <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
+                </li>
+            `;
+        });
+        html += '</ul>';
+    }
+    return html;
+}
+function toggleEventType(typeId, isChecked) {
+    const numericTypeId = Number(typeId);
+    let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
+    
+    if (isChecked) {
+        if (!currentEtpIds.includes(numericTypeId)) {
+            currentEtpIds.push(numericTypeId);
+            localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
+            updatePageTypesPlaces();
+            updatePageEvents();
+        }
+    } else {
+        currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
+        localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
+    }
+
+    const rows = document.querySelectorAll(`.etp_id${numericTypeId}`);
+    rows.forEach(row => {
+        row.style.display = isChecked ? 'flex' : 'none';
+    });
+    const timelines = document.querySelectorAll(`.etp_id${numericTypeId}`);
+    timelines.forEach(timeline => {
+        timeline.style.display = isChecked ? 'flex' : 'none';
+    });
+}
+
         function Head() {
             return `
                 <h1>Header Area</h1>
@@ -232,6 +280,8 @@
         function Menu() {
             return `
                 <button onclick="getAllREST()">Reload Events</button>
+                <br><br>
+                ${createTypesCheckboxes()}
             `;
         }
 
