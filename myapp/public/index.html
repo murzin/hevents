@@ -216,7 +216,7 @@
 
                 getAllRequest.onsuccess = function() {
                     const allEvents = getAllRequest.result;
-                    events = allEvents.filter(event => 
+                    events = allEvents.filter(event =>
                         etp_ids.includes(event.etp_id) && 
                         epl_ids.includes(event.epl_id)
                         &&
@@ -226,6 +226,12 @@
                         &&
                         ( !!localStorage.getItem('evt_to')
                             ? localStorage.getItem('evt_to') >= event.evt_to
+                            : true )
+                        &&
+                        ( !!localStorage.getItem('search_event')
+                            ? event.evt_name
+                                .toLowerCase()
+                                .includes(localStorage.getItem('search_event').toLowerCase())
                             : true )
                     );
                     db.close();
@@ -347,7 +353,13 @@
 
         function Head() {
             return `
+            <table><tr><td>
                 <h1>People and Events</h1>
+              </td><td>  
+                <input type="text" name="search_event" id="search_event" value="${!!localStorage.search_event?localStorage.search_event:''}">
+                <button onclick="doSearch()" style="width:20px">>></button>
+                <button onclick="window.document.getElementById('search_event').value='';doSearch()" style="width:20px">X</button>
+            </td><tr></table>    
             `;
         }
 
@@ -523,6 +535,12 @@
         function setRange() {
             localStorage.evt_from = document.getElementById('evt_from').value;
             localStorage.evt_to = document.getElementById('evt_to').value;
+            updatePageTypesPlaces();
+            updatePageEvents();
+        }
+
+        function doSearch() {
+            localStorage.search_event = document.getElementById('search_event').value;
             updatePageTypesPlaces();
             updatePageEvents();
         }
