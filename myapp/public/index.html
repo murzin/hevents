@@ -89,9 +89,9 @@
         }
 
         function getAllREST() {
-            getEventsREST();
             getEventTypesREST();
             getEventPlacesREST();
+            getEventsREST();
         }
 
         function getEventsREST() {
@@ -179,10 +179,24 @@
                     if (!localStorage.getItem('etp_ids')) {
                         const uniqueEtpIds = [...new Set(allEvents.map(event => event.etp_id))];
                         localStorage.setItem('etp_ids', JSON.stringify(uniqueEtpIds));
+                        uniqueEtpIds.forEach(etp_id => {
+                             let r = Math.floor(Math.random() * 56) + 200;
+                             let g = Math.floor(Math.random() * 56) + 200;
+                             let b = Math.floor(Math.random() * 56) + 200;
+                             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                            localStorage.setItem('typeColor' + etp_id, color);
+                        });
                     }
                     if (!localStorage.getItem('epl_ids')) {
                         const uniqueEplIds = [...new Set(allEvents.map(event => event.epl_id))];
                         localStorage.setItem('epl_ids', JSON.stringify(uniqueEplIds));
+                        uniqueEplIds.forEach(epl_id => {
+                             let r = Math.floor(Math.random() * 156);
+                             let g = Math.floor(Math.random() * 156);
+                             let b = Math.floor(Math.random() * 156);
+                             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                            localStorage.setItem('placeColor' + epl_id, color);
+                        });
                     }
                     
                     updatePageTypesPlaces();
@@ -350,7 +364,7 @@
                         <br>
                         From: <input id="evt_from" style="width:50px" type="text" name="evt_from" value="${!!localStorage.evt_from?localStorage.evt_from:''}">
                         To: <input id="evt_to" style="width:50px" type="text" name="evt_to" value="${!!localStorage.evt_to?localStorage.evt_to:''}">
-                        <button onclick="setRange()" style="width:10px">>></button>
+                        <button onclick="setRange()" style="width:20px">>></button>
                         <br><br>
                     </td></tr>
                     <tr>
