@@ -410,14 +410,14 @@
         }
 
         function popupColors() {
-            const popup = window.open('', 'ColorPicker', 'width=400,height=500');
+            const popup = window.open('', 'ColorPicker', 'width=800,height=500');
             let html = `
                 <div style="padding: 20px;">
                     <h2 style="text-align: center;">Color Settings</h2>
-                    <div style="display: flex; flex-direction: column; height: 400px; overflow: auto;">
+                    <div style="display: flex;">
                         <div style="flex: 1; margin-bottom: 20px;">
                             <h3>Types</h3>
-                            <ul style="list-style: none; padding: 0;">
+                            <ul>
             `;
 
             const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
@@ -426,7 +426,7 @@
                 html += `
                     <li style="margin-bottom: 10px;">
                         <label style="display: block; margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
-                        <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="width: 100%;">
+                        <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="iwidth: 100%;">
                     </li>
                 `;
             });
@@ -436,7 +436,7 @@
                         </div>
                         <div style="flex: 1;">
                             <h3>Places</h3>
-                            <ul style="list-style: none; padding: 0;">
+                            <ul>
             `;
 
             const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
@@ -445,7 +445,7 @@
                 html += `
                     <li style="margin-bottom: 10px;">
                         <label style="display: block; margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
-                        <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="width: 100%;">
+                        <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="iwidth: 100%;">
                     </li>
                 `;
             });
