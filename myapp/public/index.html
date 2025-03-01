@@ -466,8 +466,19 @@
 
         function popupColors() {
             const popup = window.open('', 'ColorPicker', 'width=800,height=500');
-            let html = `
-                <div style="padding: 20px;">
+            let html = `<html>
+                        <head>
+                            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+                        <style>
+                            html, body {
+                                height: 100%;
+                                width: 100%;
+                                font-family: 'Poppins', sans-serif;
+                            }
+                        </style>
+                        </head>
+                        <body>
+                <div style="padding: 10px;">
                     <h2 style="text-align: center;">Color Settings</h2>
                     <div style="display: flex;">
                         <div style="flex: 1; margin-bottom: 20px;">
@@ -518,6 +529,7 @@
                             " style="padding: 10px 20px;">Save</button>
                     </div>
                 </div>
+                </body></html>
             `;
 
             popup.document.write(html);
