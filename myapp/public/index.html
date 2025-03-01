@@ -45,7 +45,7 @@
     </style>
 </head>
 <body onload="main()">
-    <table>
+    <table border=1>
         <tr>
             <td id="headBlock" colspan="2" style="height: 10%;"></td>
         </tr>
@@ -221,7 +221,7 @@
         }
 
         function createTypesCheckboxes() {
-            let html = '<h3>Event Types</h3>';
+            let html = '<h3>Types</h3>';
             const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
             
             if (eventTypes.length === 0) {
@@ -244,7 +244,7 @@
         }
 
         function createPlaceCheckboxes() {
-            let html = '<h3>Event Places</h3>';
+            let html = '<h3>Places</h3>';
             const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
             
             if (eventPlaces.length === 0) {
@@ -326,12 +326,21 @@
 
         function Menu() {
             return `
-                <button onclick="getAllREST()">Reload Events</button>
-                <br><br>
-                <div class="menu-columns">
-                    <div class="menu-column">${createTypesCheckboxes()}</div>
-                    <div class="menu-column">${createPlaceCheckboxes()}</div>
-                </div>
+                <table border=2 style="width: 100%;">
+                    <tr colspan=2><td>
+                        <button onclick="getAllREST()">Reload Events</button>
+                        <br><br>
+                    </td></tr>
+                    <tr>
+                        <td style="width: 50%; vertical-align: top;">${createTypesCheckboxes()}</td>
+                        <td style="width: 50%; vertical-align: top;">${createPlaceCheckboxes()}</td>
+                    </tr>
+                    <tr colspan=2><td>
+                        <br>
+                        <button onclick="popupColors()">Colors</button>
+                        <br><br>
+                    </td></tr>
+                </table>
             `;
         }
 
@@ -350,20 +359,20 @@
                 events.forEach(event => {
                     const startOffset = new Date(event.evt_from) - new Date(minFrom);
                     const endOffset = new Date(event.evt_to) - new Date(minFrom);
-                    const startPercent = (startOffset / totalDuration) * 100;
-                    const durationPercent = ((endOffset - startOffset) / totalDuration) * 100;
-
+                    const startPercent = Math.round((startOffset / totalDuration) * 100);
+                    let durationPercent;
+                    if (startOffset == endOffset ) {
+                        durationPercent = 1;
+                    } else {
+                        durationPercent = Math.round(((endOffset - startOffset) / totalDuration) * 100);
+                    }
                     html += `
                         <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}">
                         <div style="
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                             background: linear-gradient(to right,
                                 transparent ${startPercent}%,
-                                #add8e6 ${startPercent}%, #add8e6 ${startPercent + durationPercent}%,
+                                ${pickupTypeColor(event.etp_id)} ${startPercent}%, ${pickupTypeColor(event.etp_id)} ${startPercent + durationPercent}%,
                                 transparent ${startPercent + durationPercent}%
                                 );
                             z-index: -1;
@@ -374,7 +383,7 @@
                         </div>
                         <div class="event-timeline etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}" style="display: flex; width: 100%; height: 3px;">
                             <div style="width: ${startPercent}%;"></div>
-                            <div style="width: ${durationPercent}%; background-color: red;"></div>
+                            <div style="width: ${durationPercent}%; background-color: ${pickupPlaceColor(event.epl_id)};"></div>
                             <div style="width: ${100 - startPercent - durationPercent}%;"></div>
                         </div>
                     `;
@@ -383,12 +392,90 @@
             }
             return html;
         }
-
         function Footer() {
             return `
                 <small>work in progress..</small>
             `;
         }
+
+        function pickupTypeColor(etp_id) {
+            const color = localStorage.getItem('typeColor' + etp_id);
+            return color ? color : 'HoneyDew';
+        }
+
+        function pickupPlaceColor(epl_id) {
+            const color = localStorage.getItem('placeColor' + epl_id);
+            return color ? color : 'IndianRed';
+        }
+
+        function popupColors() {
+            const popup = window.open('', 'ColorPicker', 'width=400,height=500');
+            let html = `
+                <div style="padding: 20px;">
+                    <h2 style="text-align: center;">Color Settings</h2>
+                    <div style="display: flex; flex-direction: column; height: 400px; overflow: auto;">
+                        <div style="flex: 1; margin-bottom: 20px;">
+                            <h3>Types</h3>
+                            <ul style="list-style: none; padding: 0;">
+            `;
+
+            const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+            eventTypes.forEach(type => {
+                const colorValue = localStorage.getItem('typeColor' + type.etp_id) || pickupTypeColor(type.etp_id);
+                html += `
+                    <li style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
+                        <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="width: 100%;">
+                    </li>
+                `;
+            });
+
+            html += `
+                            </ul>
+                        </div>
+                        <div style="flex: 1;">
+                            <h3>Places</h3>
+                            <ul style="list-style: none; padding: 0;">
+            `;
+
+            const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
+            eventPlaces.forEach(place => {
+                const colorValue = localStorage.getItem('placeColor' + place.epl_id) || pickupPlaceColor(place.epl_id);
+                html += `
+                    <li style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
+                        <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="width: 100%;">
+                    </li>
+                `;
+            });
+
+            html += `
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.opener.saveColors(window.document); window.close();" style="padding: 10px 20px;">Save</button>
+                    </div>
+                </div>
+            `;
+
+            popup.document.write(html);
+            popup.document.close();
+        }
+
+        function saveColors(d) {
+            const eventTypes = JSON.parse(localStorage.event_types);
+            const eventPlaces = JSON.parse(localStorage.event_places);
+            eventTypes.forEach(type => {
+                const color = d.getElementById('typeColor_' + type.etp_id).value;
+                localStorage.setItem('typeColor' + type.etp_id, color);
+            });
+            eventPlaces.forEach(place => {
+                const color = d.getElementById('placeColor_' + place.epl_id).value;
+                localStorage.setItem('placeColor' + place.epl_id, color);
+            });
+        }
+
     </script>
     </body>
 </html>
