@@ -378,6 +378,7 @@
                         From: <input id="evt_from" style="width:50px" type="text" name="evt_from" value="${!!localStorage.evt_from?localStorage.evt_from:''}">
                         To: <input id="evt_to" style="width:50px" type="text" name="evt_to" value="${!!localStorage.evt_to?localStorage.evt_to:''}">
                         <button onclick="setRange()" style="width:20px">>></button>
+                        <button onclick="window.document.getElementById('evt_from').value=''; window.document.getElementById('evt_to').value='';setRange()" style="width:20px">X</button>
                         <br><br>
                     </td></tr>
                     <tr>
