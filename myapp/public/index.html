@@ -326,8 +326,9 @@
 
         function Menu() {
             return `
-                <table border=2 style="width: 100%;">
-                    <tr colspan=2><td>
+                <table style="width: 100%;margin-left:20px;">
+                    <tr><td colspan="2">
+                        <br>
                         <button onclick="getAllREST()">Reload Events</button>
                         <br><br>
                     </td></tr>
@@ -335,7 +336,7 @@
                         <td style="width: 50%; vertical-align: top;">${createTypesCheckboxes()}</td>
                         <td style="width: 50%; vertical-align: top;">${createPlaceCheckboxes()}</td>
                     </tr>
-                    <tr colspan=2><td>
+                    <tr><td colspan="2">
                         <br>
                         <button onclick="popupColors()">Colors</button>
                         <br><br>
@@ -351,8 +352,8 @@
             } else {
                 const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
                 const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
-                html = `<h2>Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
-                html += '<div>';
+                html = `<h2 style="margin:10px" >Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
+                html += '<div style="margin-left:10px" >';
 
                 const totalDuration = new Date(maxTo) - new Date(minFrom);
 
@@ -454,7 +455,12 @@
                         </div>
                     </div>
                     <div style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.opener.saveColors(window.document); window.close();" style="padding: 10px 20px;">Save</button>
+                        <button onclick="
+                            window.opener.saveColors(window.document);
+                            window.opener.updatePageTypesPlaces();
+                            window.opener.updatePageEvents();
+                            window.close();
+                            " style="padding: 10px 20px;">Save</button>
                     </div>
                 </div>
             `;
