@@ -425,7 +425,7 @@
                 const colorValue = localStorage.getItem('typeColor' + type.etp_id) || pickupTypeColor(type.etp_id);
                 html += `
                     <li style="margin-bottom: 10px;">
-                        <label style="display: block; margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
+                        <label style="margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
                         <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="iwidth: 100%;">
                     </li>
                 `;
@@ -444,7 +444,7 @@
                 const colorValue = localStorage.getItem('placeColor' + place.epl_id) || pickupPlaceColor(place.epl_id);
                 html += `
                     <li style="margin-bottom: 10px;">
-                        <label style="display: block; margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
+                        <label style="margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
                         <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="iwidth: 100%;">
                     </li>
                 `;
