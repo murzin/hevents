@@ -74,6 +74,10 @@
         function main() {
             getEvents();
             document.getElementById('headBlock').innerHTML = Head();
+            document.getElementById("search_event").addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    doSearch();
+                }});
             document.getElementById('menuBlock').innerHTML = Menu();
             document.getElementById('workBlock').innerHTML = Work();
             document.getElementById('footerBlock').innerHTML = Footer();
