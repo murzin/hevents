@@ -90,6 +90,7 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Id</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <template v-if="activeTab === 'events'">
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
@@ -102,6 +103,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <tr v-for="item in paginatedItems" :key="item.id" class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.evt_id  || item.etp_id || item.epl_id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.evt_name || item.etp_name || item.epl_name }}</td>
                             <template v-if="activeTab === 'events'">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.etp_name }}</td>
