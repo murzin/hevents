@@ -16,6 +16,7 @@ sub list {
     my $arr = $sth->fetchall_arrayref({});
     for (@$arr) {
         $_->{evt_name} = decode_utf8($_->{evt_name});
+        $_->{evt_desc} = decode_utf8($_->{evt_desc});
         $_->{evt_from} = substr($_->{evt_from}, 0, 4);
         $_->{evt_to} = substr($_->{evt_to}, 0, 4);
         my $links = [];
