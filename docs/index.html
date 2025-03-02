@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <title>Full Width Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Poppins', sans-serif;
+        }
+        table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+        #headBlock {
+            background-color: #f0f0f0;
+        }
+        #menuBlock {
+            background-color: #e0e0e0;
+            vertical-align: top;
+            font-size: small;
+        }
+        #workBlock {
+            vertical-align: top;
+        }
+        #footerBlock {
+            text-align: center;
+        }
+        .event-row {
+            position: relative;
+        }
+        a.event_link {
+            color: black;
+            text-decoration:none;
+        }
+    </style>
+</head>
+<body onload="main()">
+    <table border=1>
+        <tr>
+            <td id="headBlock" colspan="2" style="height: 10%;"></td>
+        </tr>
+        <tr>
+            <td id="menuBlock" style="width: 20%; height: 80%;"></td>
+            <td id="workBlock" style="width: 80%; height: 80%;"></td>
+        </tr>
+        <tr>
+            <td id="footerBlock" colspan="2" style="height: 10%;"></td>
+        </tr>
+    </table>
+
+    <script>
+        const API_HOST = '';
+        const API_EVENTS = '/events';
+        const API_EVENTTYPES = '/event_types';
+        const API_EVENTPLACES = '/event_places';
+        let etp_ids = [];
+        let epl_ids = [];
+        let events = [];
+
+        function main() {
+            getEvents();
+            document.getElementById('headBlock').innerHTML = Head();
+            document.getElementById("search_event").addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    doSearch();
+                }});
+            document.getElementById('menuBlock').innerHTML = Menu();
+            document.getElementById('workBlock').innerHTML = Work();
+            document.getElementById('footerBlock').innerHTML = Footer();
+        }
+
+        function getEvents() {
+            if (isFirstTime()) {
+                getAllREST();
+            } else {
+                updatePageTypesPlaces();
+                updatePageEvents();
+            }
+        }
+
+        function getAllREST() {
+            getEventTypesREST();
+            getEventPlacesREST();
+            getEventsREST();
+        }
+
+        function getEventsREST() {
+            fetch(API_HOST + API_EVENTS, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                storeToDb(data);
+            })
+            .catch(error => console.error('Error fetching events:', error));
+        }
+
+        function getEventTypesREST() {
+            fetch(API_HOST + API_EVENTTYPES, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem('event_types', JSON.stringify(data));
+            })
+            .catch(error => console.error('Error fetching event types:', error));
+        }
+
+        function getEventPlacesREST() {
+            fetch(API_HOST + API_EVENTPLACES, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem('event_places', JSON.stringify(data));
+            })
+            .catch(error => console.error('Error fetching event places:', error));
+        }
+
+        function storeToDb(eventsArray) {
+            const request = indexedDB.open('EventsDB', 1);
+
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                db.createObjectStore('events', { keyPath: 'evt_id', autoIncrement: false});
+            };
+
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['events'], 'readwrite');
+                const store = transaction.objectStore('events');
+                
+                const clearRequest = store.clear();
+                
+                clearRequest.onsuccess = function() {
+                    eventsArray.forEach(event => {
+                        store.add(event);
+                    });
+                };
+
+                transaction.oncomplete = function() {
+                    db.close();
+                    updateLSTypesPlaces();
+                };
+            };
+        }
+
+        function updateLSTypesPlaces() {
+            const request = indexedDB.open('EventsDB', 1);
+
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['events'], 'readonly');
+                const store = transaction.objectStore('events');
+                const getAllRequest = store.getAll();
+
+                getAllRequest.onsuccess = function() {
+                    const allEvents = getAllRequest.result;
+                    
+                    if (!localStorage.getItem('etp_ids')) {
+                        const uniqueEtpIds = [...new Set(allEvents.map(event => event.etp_id))];
+                        localStorage.setItem('etp_ids', JSON.stringify(uniqueEtpIds));
+                        uniqueEtpIds.forEach(etp_id => localStorage.setItem('typeColor' + etp_id, randColor(200)));
+                    }
+                    if (!localStorage.getItem('epl_ids')) {
+                        const uniqueEplIds = [...new Set(allEvents.map(event => event.epl_id))];
+                        localStorage.setItem('epl_ids', JSON.stringify(uniqueEplIds));
+                        uniqueEplIds.forEach(epl_id => localStorage.setItem('placeColor' + epl_id, randColor(100)));
+                    }
+                    
+                    updatePageTypesPlaces();
+                    updatePageEvents();
+                };
+            };
+        }
+
+        function updatePageEvents() {
+            const request = indexedDB.open('EventsDB', 1);
+
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['events'], 'readonly');
+                const store = transaction.objectStore('events');
+                const getAllRequest = store.getAll();
+
+                getAllRequest.onsuccess = function() {
+                    const allEvents = getAllRequest.result;
+                    events = allEvents.filter(event =>
+                        etp_ids.includes(event.etp_id) && 
+                        epl_ids.includes(event.epl_id)
+                        &&
+                        ( !!localStorage.getItem('evt_from')
+                            ? localStorage.getItem('evt_from') <= event.evt_from
+                            : true )
+                        &&
+                        ( !!localStorage.getItem('evt_to')
+                            ? localStorage.getItem('evt_to') >= event.evt_to
+                            : true )
+                        &&
+                        ( !!localStorage.getItem('search_event')
+                            ? event.evt_name
+                                .toLowerCase()
+                                .includes(localStorage.getItem('search_event').toLowerCase())
+                            : true )
+                    );
+                    db.close();
+                    document.getElementById('menuBlock').innerHTML = Menu();
+                    document.getElementById('workBlock').innerHTML = Work();
+                };
+            };
+        }
+
+        function updatePageTypesPlaces() {
+            etp_ids = JSON.parse(localStorage.getItem('etp_ids') || '[]');
+            epl_ids = JSON.parse(localStorage.getItem('epl_ids') || '[]');
+        }
+
+        function isFirstTime() {
+            if (localStorage.getItem('etp_ids') && localStorage.getItem('epl_ids')) {
+                return false;
+            }
+            return true;
+        }
+
+        function createTypesCheckboxes() {
+            let html = '<h3>Types</h3>';
+            const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+            
+            if (eventTypes.length === 0) {
+                html += '<p>No event types available</p>';
+            } else {
+                html += '<ul>';
+                let all_are_checked = 1;
+                eventTypes.forEach(type => {
+                    const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
+                    if (isChecked != 'checked') all_are_checked = 0;
+                    html += `
+                        <li>
+                            <input class="type_checkbox" type="checkbox" id="type_${type.etp_id}" ${isChecked}
+                                onchange="toggleEventType('${type.etp_id}', this.checked)">
+                            <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
+                        </li>
+                    `;
+                });
+                html += `
+                        <li>
+                            <input type="checkbox" id="type_all" ${all_are_checked?'checked':''}
+                                onchange="
+                                    let to_be = this.checked;
+                                    document.querySelectorAll('.type_checkbox').forEach(
+                                        chb => {
+                                            chb.checked = to_be;
+                                            toggleEventType(chb.id.slice(5), to_be);
+                                        }
+                                    );
+                                    ">
+                            <label for="type_all" style="font-weight:bold;">All</label>
+                        </li>
+                   </ul>`;
+            }
+            return html;
+        }
+
+        function createPlaceCheckboxes() {
+            let html = '<h3>Places</h3>';
+            const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
+            
+            if (eventPlaces.length === 0) {
+                html += '<p>No event places available</p>';
+            } else {
+                html += '<ul>';
+                all_are_checked = 1;
+                eventPlaces.forEach(place => {
+                    const isChecked = epl_ids.includes(place.epl_id) ? 'checked' : '';
+                    if (isChecked != 'checked') all_are_checked = 0;
+                    html += `
+                        <li>
+                            <input class="place_checkbox" type="checkbox" id="place_${place.epl_id}" ${isChecked}
+                                onchange="toggleEventPlace('${place.epl_id}', this.checked)">
+                            <label for="place_${place.epl_id}">${place.epl_name || 'Unnamed Place'}</label>
+                        </li>
+                    `;
+                });
+                html += `
+                        <li>
+                            <input type="checkbox" id="place_all" ${all_are_checked?'checked':''}
+                                onchange="
+                                    let to_be = this.checked;
+                                    document.querySelectorAll('.place_checkbox').forEach(
+                                        chb => {
+                                            chb.checked = to_be;
+                                            toggleEventPlace(chb.id.slice(6), to_be);
+                                        }
+                                    );
+                                    ">
+                            <label for="place_all" style="font-weight:bold;">All</label>
+                        </li>
+                   </ul>`;
+            }
+            return html;
+        }
+
+        function toggleEventType(typeId, isChecked) {
+            const numericTypeId = Number(typeId);
+            let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
+            
+            if (isChecked) {
+                if (!currentEtpIds.includes(numericTypeId)) {
+                    currentEtpIds.push(numericTypeId);
+                    localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
+                    updatePageTypesPlaces();
+                    updatePageEvents();
+                }
+            } else {
+                currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
+                localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
+            }
+
+            const rows = document.querySelectorAll(`.etp_id${numericTypeId}`);
+            rows.forEach(row => {
+                row.style.display = isChecked ? 'flex' : 'none';
+            });
+            const timelines = document.querySelectorAll(`.etp_id${numericTypeId}`);
+            timelines.forEach(timeline => {
+                timeline.style.display = isChecked ? 'flex' : 'none';
+            });
+        }
+
+        function toggleEventPlace(placeId, isChecked) {
+            const numericPlaceId = Number(placeId);
+            let currentEplIds = JSON.parse(localStorage.getItem('epl_ids') || '[]');
+            
+            if (isChecked) {
+                if (!currentEplIds.includes(numericPlaceId)) {
+                    currentEplIds.push(numericPlaceId);
+                    localStorage.setItem('epl_ids', JSON.stringify([...new Set(currentEplIds)]));
+                    updatePageTypesPlaces();
+                    updatePageEvents();
+                }
+            } else {
+                currentEplIds = currentEplIds.filter(id => id !== numericPlaceId);
+                localStorage.setItem('epl_ids', JSON.stringify(currentEplIds));
+            }
+
+            const rows = document.querySelectorAll(`.epl_id${numericPlaceId}`);
+            rows.forEach(row => {
+                row.style.display = isChecked ? 'flex' : 'none';
+            });
+            const timelines = document.querySelectorAll(`.epl_id${numericPlaceId}`);
+            timelines.forEach(timeline => {
+                timeline.style.display = isChecked ? 'flex' : 'none';
+            });
+        }
+
+        function Head() {
+            return `
+            <table><tr><td>
+                <h1 style="margin-left:10px;">People and Events</h1>
+              </td><td>  
+                <input type="text" name="search_event" id="search_event" value="${!!localStorage.search_event?localStorage.search_event:''}">
+                <button onclick="doSearch()" style="width:20px">>></button>
+                <button onclick="window.document.getElementById('search_event').value='';doSearch()" style="width:20px">X</button>
+            </td><tr></table>    
+            `;
+        }
+
+        function Menu() {
+            return `
+                <table style="width: 100%;margin-left:20px;">
+                    <tr><td colspan="2">
+                        <br>
+                        <button onclick="getAllREST()">Reload Events</button>
+                        &nbsp;&nbsp;
+                        <button onclick="popupColors()">Colors</button>
+                        <br>
+                    </td></tr>
+                    <tr><td colspan="2">
+                        <br>
+                        From: <input id="evt_from" style="width:50px" type="text" name="evt_from" value="${!!localStorage.evt_from?localStorage.evt_from:''}">
+                        To: <input id="evt_to" style="width:50px" type="text" name="evt_to" value="${!!localStorage.evt_to?localStorage.evt_to:''}">
+                        <button onclick="setRange()" style="width:20px">>></button>
+                        <button onclick="window.document.getElementById('evt_from').value=''; window.document.getElementById('evt_to').value='';setRange()" style="width:20px">X</button>
+                        <br><br>
+                    </td></tr>
+                    <tr>
+                        <td style="width: 50%; vertical-align: top;">${createTypesCheckboxes()}</td>
+                        <td style="width: 50%; vertical-align: top;">${createPlaceCheckboxes()}</td>
+                    </tr>
+                    <tr><td colspan="2">
+                        <br>
+                        <!-- button onclick="popupColors()">Colors</button-->
+                        <br><br>
+                    </td></tr>
+                </table>
+            `;
+        }
+
+        function Work() {
+            let html = '';
+            if (events.length === 0) {
+                html = '<h2>Events</h2><p>No events available</p>';
+            } else {
+                const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
+                const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
+                html = `<h2 style="margin:10px" >Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
+                html += '<div style="margin-left:10px" >';
+
+                const totalDuration = new Date(maxTo) - new Date(minFrom);
+
+                let row_count = 0;
+                events.forEach(event => {
+                    const startOffset = new Date(event.evt_from) - new Date(minFrom);
+                    const endOffset = new Date(event.evt_to) - new Date(minFrom);
+                    const startPercent = Math.round((startOffset / totalDuration) * 100);
+                    let durationPercent;
+                    if (startOffset == endOffset ) {
+                        durationPercent = 1;
+                    } else {
+                        durationPercent = Math.round(((endOffset - startOffset) / totalDuration) * 100);
+                    }
+                    html += `
+                        <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}"
+                            onclick="eventInfo(${event.evt_id}); return false"
+                        >
+                        <div style="
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background: linear-gradient(to right,
+                                transparent ${startPercent}%,
+                                ${pickupTypeColor(event.etp_id)} ${startPercent}%, ${pickupTypeColor(event.etp_id)} ${startPercent + durationPercent}%,
+                                transparent ${startPercent + durationPercent}%
+                                );
+                            z-index: -1;
+                        "></div>
+                        <div style="
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background-color: ${++row_count%2 == 0 ? '#fafafa' : ''};
+                            z-index: -2;
+                        "></div>
+                            <span style="iiifont-size:small;iiimargin-left:${startPercent}%"><a class="event_link" href="#" onclick="eventInfo(${event.evt_id}); return false">${event.evt_name || 'Unnamed Event'}</a>
+                            ,&nbsp;${event.evt_from == event.evt_to
+                            ? event.evt_from
+                            : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
+                            }</span>
+                        </div>
+                        <div class="event-timeline etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}" style="display: flex; width: 100%; height: 3px;">
+                            <div style="width: ${startPercent}%;"></div>
+                            <div style="width: ${durationPercent}%; background-color: ${pickupPlaceColor(event.epl_id)};"></div>
+                            <div style="width: ${100 - startPercent - durationPercent}%;"></div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            return html;
+        }
+        function Footer() {
+            return `
+                <small>work in progress..</small>
+            `;
+        }
+
+        function pickupTypeColor(etp_id) {
+            const color = localStorage.getItem('typeColor' + etp_id);
+            return color ? color : 'HoneyDew';
+        }
+
+        function pickupPlaceColor(epl_id) {
+            const color = localStorage.getItem('placeColor' + epl_id);
+            return color ? color : 'IndianRed';
+        }
+
+        function popupColors() {
+            let popupWidth = 840;
+            let popupHeight = 400;
+            let left = (screen.width - popupWidth) / 2;
+            let top = (screen.height - popupHeight) / 2;
+            const popup = window.open('', 'ColorPicker', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no,toolbar=no,menubar=no,location=no`);
+            let html = `
+        <html>
+            <head>
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+            <style>
+                html, body {
+                    height: 100%;
+                    width: 100%;
+                    font-family: 'Poppins', sans-serif;
+                }
+                table {
+                    width: 100%;
+                    height: 100%;
+                    border-collapse: collapse;
+                }
+                #headBlock {
+                    background-color: #f0f0f0;
+                }
+                #menuBlock {
+                    background-color: #e0e0e0;
+                }
+            </style>
+            </head>
+            <body>
+                <div style="margin-right: 20px;">
+                <table border=1>
+                    <tr id="headBlock">
+                        <td colspan=2>
+                    <h2 style="text-align: center;">Color Settings</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr><td>
+            `;
+            const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+            eventTypes.forEach(type => {
+                const colorValue = localStorage.getItem('typeColor' + type.etp_id) || pickupTypeColor(type.etp_id);
+                html += `
+                    <tr><td>
+                        <label style="margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
+                    </td><td>    
+                        <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="iwidth: 100%;">
+                    </td></tr>
+                `;
+            });
+            html += `
+                            </table>
+                        </td>
+                        <td>
+                            <table>
+            `;
+            const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
+            eventPlaces.forEach(place => {
+                const colorValue = localStorage.getItem('placeColor' + place.epl_id) || pickupPlaceColor(place.epl_id);
+                html += `
+                    <tr><td>
+                        <label style="margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
+                    </td><td>    
+                        <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="iwidth: 100%;">
+                    </td></tr>
+                `;
+            });
+
+            html += `
+                            </table>
+                        </td>
+                    </tr>
+                    <tr id="menuBlock">
+                        <td colspan=2>
+                    <div style="text-align: center; margin: 20px;">
+                        <button onclick="
+                            window.opener.saveColors(window.document);
+                            window.opener.updatePageTypesPlaces();
+                            window.opener.updatePageEvents();
+                            window.close();
+                            " style="padding: 10px 20px;">Save</button>
+                        <button onclick="
+                            window.close();
+                            " style="padding: 10px 20px;">Chancel</button>
+                    </div>
+                        </td>
+                    </tr>
+                </table>
+                </div>
+            </body>
+       </html>
+            `;
+            popup.document.write(html);
+            //popup.addEventListener("blur", function(event) {
+            //    popup.close();
+            //});
+            popup.document.close();
+        }
+
+        function saveColors(d) {
+            const eventTypes = JSON.parse(localStorage.event_types);
+            const eventPlaces = JSON.parse(localStorage.event_places);
+            eventTypes.forEach(type => {
+                const color = d.getElementById('typeColor_' + type.etp_id).value;
+                localStorage.setItem('typeColor' + type.etp_id, color);
+            });
+            eventPlaces.forEach(place => {
+                const color = d.getElementById('placeColor_' + place.epl_id).value;
+                localStorage.setItem('placeColor' + place.epl_id, color);
+            });
+        }
+
+        function setRange() {
+            localStorage.evt_from = document.getElementById('evt_from').value;
+            localStorage.evt_to = document.getElementById('evt_to').value;
+            updatePageTypesPlaces();
+            updatePageEvents();
+        }
+
+        function doSearch() {
+            localStorage.search_event = document.getElementById('search_event').value;
+            updatePageTypesPlaces();
+            updatePageEvents();
+        }
+
+        function randColor(color_base) {
+             let r = Math.floor(Math.random() * 56) + color_base;
+             let g = Math.floor(Math.random() * 56) + color_base;
+             let b = Math.floor(Math.random() * 56) + color_base;
+             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+             return color;
+        }
+
+        function eventInfo(evt_id) {
+            let request = indexedDB.open('EventsDB', 1);
+            request.onsuccess = function(event) {
+                let db = event.target.result;
+                let transaction = db.transaction(['events'], 'readonly');
+                let store = transaction.objectStore('events');
+                let getRequest = store.get(Number(evt_id));
+                getRequest.onsuccess = function() {
+                    if (getRequest.result) {
+                        //console.log("Event found:", getRequest.result);
+                        popupEvent(getRequest.result);
+                    } else {
+                        console.log("Event id ${evt_id} not found.");
+                    }
+                }
+            }
+        }
+
+        function popupEvent(event) {
+            let popupWidth = 840;
+            let popupHeight = 400;
+            let left = (screen.width - popupWidth) / 2;
+            let top = (screen.height - popupHeight) / 2;
+            const popup = window.open('', event.evt_name, `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no,toolbar=no,menubar=no,location=no`);
+            let html = `
+        <html>
+            <head>
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+            <style>
+                html, body {
+                    height: 100%;
+                    width: 100%;
+                    font-family: 'Poppins', sans-serif;
+                }
+                table {
+                    width: 100%;
+                    height: 100%;
+                    border-collapse: collapse;
+                }
+                a.event_link {
+                    color: black;
+                    text-decoration:none;
+                }
+                #headBlock {
+                    background-color: #f0f0f0;
+                }
+                #menuBlock {
+                    background-color: #e0e0e0;
+                }
+            </style>
+            </head>
+            <body>
+                <div style="margin-right: 20px;">
+                <table border=1>
+                    <tr id="headBlock">
+                        <td colspan=2>
+                    <h2 style="text-align: center;">${event.evt_name}</h2>
+                    <h3 style="text-align: center;">${event.evt_from == event.evt_to
+                            ? event.evt_from
+                            : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
+                            }</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
+                            <div style="text-align:left; margin:10px;">
+                                ${event.evt_desc}<br><br>
+                                <a href="${event.evt_url}" target="_blank">more info</a>
+                            </div>
+                        </td>
+                    </tr>
+            `;
+            if (event.links.length) {
+            html += `
+                    <tr id="menuBlock">
+                        <td>
+                            <div style="text-align:right; margin:10px;">
+                            Links:
+                            </div>
+                        </td>
+                        <td>
+                        `;
+                        event.links.forEach(link => {
+                            html += `
+                            <div style="text-align:left; margin:10px;">
+                            <a class="event_link" href='#' onclick="window.opener.eventInfo(${link[0]}); window.close();return false;">
+                            ${link[1]}
+                            </a>
+                            </div>`;
+                        });    
+                        html += `
+                        </td>
+                    </tr>
+            `;
+            }
+            html += `
+                    <tr>
+                        <td colspan=2>
+                    <div style="text-align: center; margin: 20px;">
+                        <button onclick="
+                            window.close();
+                            " style="padding: 10px 20px;">Close</button>
+                    </div>
+                        </td>
+                    </tr>
+                </table>
+                </div>
+            </body>
+       </html>
+            `;
+            popup.document.write(html);
+            //popup.addEventListener("blur", function(event) {
+            //    popup.close();
+            //});
+            popup.document.close();
+        }
+    </script>
+    </body>
+</html>
