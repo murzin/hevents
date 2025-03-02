@@ -622,7 +622,7 @@
             </style>
             </head>
             <body>
-                <div style="padding: 10px;">
+                <div style="margin-right: 20px;">
                 <table border=1>
                     <tr>
                         <td colspan=2>
@@ -641,6 +641,31 @@
                             </div>
                         </td>
                     </tr>
+            `;
+            if (event.links.length) {
+            html += `
+                    <tr>
+                        <td>
+                            <div style="text-align:right; margin:10px;">
+                            Links:
+                            </div>
+                        </td>
+                        <td>
+                        `;
+                        event.links.forEach(link => {
+                            html += `
+                            <div style="text-align:left; margin:10px;">
+                            <a href='#' onclick="window.opener.eventInfo(${link[0]}); window.close();return false;">
+                            ${link[1]}
+                            </a>
+                            </div>`;
+                        });    
+                        html += `
+                        </td>
+                    </tr>
+            `;
+            }
+            html += `
                     <tr>
                         <td colspan=2>
                     <div style="text-align: center; margin: 20px;">
