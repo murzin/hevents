@@ -346,7 +346,7 @@
         function Head() {
             return `
             <table><tr><td>
-                <h1>People and Events</h1>
+                <h1 style="margin-left:10px;">People and Events</h1>
               </td><td>  
                 <input type="text" name="search_event" id="search_event" value="${!!localStorage.search_event?localStorage.search_event:''}">
                 <button onclick="doSearch()" style="width:20px">>></button>
@@ -453,7 +453,11 @@
         }
 
         function popupColors() {
-            const popup = window.open('', 'ColorPicker', 'width=800,height=500');
+            let popupWidth = 840;
+            let popupHeight = 400;
+            let left = (screen.width - popupWidth) / 2;
+            let top = (screen.height - popupHeight) / 2;
+            const popup = window.open('', 'ColorPicker', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no`);
             let html = `
         <html>
             <head>
