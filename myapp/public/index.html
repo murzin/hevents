@@ -395,6 +395,7 @@
 
                 const totalDuration = new Date(maxTo) - new Date(minFrom);
 
+                let row_count = 0;
                 events.forEach(event => {
                     const startOffset = new Date(event.evt_from) - new Date(minFrom);
                     const endOffset = new Date(event.evt_to) - new Date(minFrom);
@@ -418,8 +419,13 @@
                                 );
                             z-index: -1;
                         "></div>
-                            <span><a class="event_link" href="#" onclick="eventInfo(${event.evt_id}); return false">${event.evt_name || 'Unnamed Event'}</a></span>
-                            ,&nbsp;<span>${event.evt_from == event.evt_to
+                        <div style="
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background-color: ${++row_count%2 == 0 ? '#fafafa' : ''};
+                            z-index: -2;
+                        "></div>
+                            <span style="iiifont-size:small;iiimargin-left:${startPercent}%"><a class="event_link" href="#" onclick="eventInfo(${event.evt_id}); return false">${event.evt_name || 'Unnamed Event'}</a>
+                            ,&nbsp;${event.evt_from == event.evt_to
                             ? event.evt_from
                             : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
                             }</span>
