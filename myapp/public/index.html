@@ -12,39 +12,36 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         html, body {
             height: 100%;
             width: 100%;
             font-family: 'Poppins', sans-serif;
         }
-
         table {
             width: 100%;
             height: 100%;
             border-collapse: collapse;
         }
-
         #headBlock {
             background-color: #f0f0f0;
         }
-
         #menuBlock {
             background-color: #e0e0e0;
             vertical-align: top;
             font-size: small;
         }
-
         #workBlock {
             vertical-align: top;
         }
-
         #footerBlock {
             text-align: center;
         }
-
         .event-row {
             position: relative;
+        }
+        a.event_link {
+            color: black;
+            text-decoration:none;
         }
     </style>
 </head>
@@ -419,7 +416,7 @@
                                 );
                             z-index: -1;
                         "></div>
-                            <span>${event.evt_name || 'Unnamed Event'}</span>
+                            <span><a class="event_link" href="#" onclick="eventInfo(${event.evt_id}); return false">${event.evt_name || 'Unnamed Event'}</a></span>
                             ,&nbsp;<span>${event.evt_from == event.evt_to
                             ? event.evt_from
                             : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
@@ -619,6 +616,10 @@
                     height: 100%;
                     border-collapse: collapse;
                 }
+                a.event_link {
+                    color: black;
+                    text-decoration:none;
+                }
             </style>
             </head>
             <body>
@@ -655,7 +656,7 @@
                         event.links.forEach(link => {
                             html += `
                             <div style="text-align:left; margin:10px;">
-                            <a href='#' onclick="window.opener.eventInfo(${link[0]}); window.close();return false;">
+                            <a class="event_link" href='#' onclick="window.opener.eventInfo(${link[0]}); window.close();return false;">
                             ${link[1]}
                             </a>
                             </div>`;
