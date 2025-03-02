@@ -27,6 +27,20 @@ sub startup {
         my $c = shift;
         $c->reply->static('backend.html');
     });
+    
+    # static jsons
+    $r->get('/events.json' => sub {
+        my $c = shift;
+        $c->reply->static('events.json');
+    });
+    $r->get('/event_types.json' => sub {
+        my $c = shift;
+        $c->reply->static('event_types.json');
+    });
+    $r->get('/event_places.json' => sub {
+        my $c = shift;
+        $c->reply->static('event_places.json');
+    });
 
     # API routes
     my $api = $r->under('/api');
