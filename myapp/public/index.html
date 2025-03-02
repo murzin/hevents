@@ -476,51 +476,61 @@
                     width: 100%;
                     font-family: 'Poppins', sans-serif;
                 }
+                table {
+                    width: 100%;
+                    height: 100%;
+                    border-collapse: collapse;
+                }
             </style>
             </head>
             <body>
                 <div style="padding: 10px;">
+                <table border=1>
+                    <tr>
+                        <td colspan=2>
                     <h2 style="text-align: center;">Color Settings</h2>
-                    <div style="display: flex;">
-                        <div style="flex: 1; margin-bottom: 20px;">
-                            <h3>Types</h3>
-                            <ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr><td>
             `;
-
             const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
             eventTypes.forEach(type => {
                 const colorValue = localStorage.getItem('typeColor' + type.etp_id) || pickupTypeColor(type.etp_id);
                 html += `
-                    <li style="margin-bottom: 10px;">
+                    <tr><td>
                         <label style="margin-bottom: 5px;">${type.etp_name || 'Unnamed Type'}</label>
+                    </td><td>    
                         <input type="text" id="typeColor_${type.etp_id}" value="${colorValue}" style="iwidth: 100%;">
-                    </li>
+                    </td></tr>
                 `;
             });
-
             html += `
-                            </ul>
-                        </div>
-                        <div style="flex: 1;">
-                            <h3>Places</h3>
-                            <ul>
+                            </table>
+                        </td>
+                        <td>
+                            <table>
             `;
-
             const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
             eventPlaces.forEach(place => {
                 const colorValue = localStorage.getItem('placeColor' + place.epl_id) || pickupPlaceColor(place.epl_id);
                 html += `
-                    <li style="margin-bottom: 10px;">
+                    <tr><td>
                         <label style="margin-bottom: 5px;">${place.epl_name || 'Unnamed Place'}</label>
+                    </td><td>    
                         <input type="text" id="placeColor_${place.epl_id}" value="${colorValue}" style="iwidth: 100%;">
-                    </li>
+                    </td></tr>
                 `;
             });
 
             html += `
-                            </ul>
-                        </div>
-                    </div>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
                     <div style="text-align: center; margin-top: 20px;">
                         <button onclick="
                             window.opener.saveColors(window.document);
@@ -532,6 +542,9 @@
                             window.close();
                             " style="padding: 10px 20px;">Chancel</button>
                     </div>
+                        </td>
+                    </tr>
+                </table>
                 </div>
             </body>
        </html>
