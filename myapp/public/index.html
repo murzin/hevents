@@ -250,17 +250,33 @@
                 html += '<p>No event types available</p>';
             } else {
                 html += '<ul>';
+                let all_are_checked = 1;
                 eventTypes.forEach(type => {
                     const isChecked = etp_ids.includes(type.etp_id) ? 'checked' : '';
+                    if (isChecked != 'checked') all_are_checked = 0;
                     html += `
                         <li>
-                            <input type="checkbox" id="type_${type.etp_id}" ${isChecked}
+                            <input class="type_checkbox" type="checkbox" id="type_${type.etp_id}" ${isChecked}
                                 onchange="toggleEventType('${type.etp_id}', this.checked)">
                             <label for="type_${type.etp_id}">${type.etp_name || 'Unnamed Type'}</label>
                         </li>
                     `;
                 });
-                html += '</ul>';
+                html += `
+                        <li>
+                            <input type="checkbox" id="type_all" ${all_are_checked?'checked':''}
+                                onchange="
+                                    let to_be = this.checked;
+                                    document.querySelectorAll('.type_checkbox').forEach(
+                                        chb => {
+                                            chb.checked = to_be;
+                                            toggleEventType(chb.id.slice(5), to_be);
+                                        }
+                                    );
+                                    ">
+                            <label for="type_all" style="font-weight:bold;">All</label>
+                        </li>
+                   </ul>`;
             }
             return html;
         }
@@ -273,17 +289,33 @@
                 html += '<p>No event places available</p>';
             } else {
                 html += '<ul>';
+                all_are_checked = 1;
                 eventPlaces.forEach(place => {
                     const isChecked = epl_ids.includes(place.epl_id) ? 'checked' : '';
+                    if (isChecked != 'checked') all_are_checked = 0;
                     html += `
                         <li>
-                            <input type="checkbox" id="place_${place.epl_id}" ${isChecked}
+                            <input class="place_checkbox" type="checkbox" id="place_${place.epl_id}" ${isChecked}
                                 onchange="toggleEventPlace('${place.epl_id}', this.checked)">
                             <label for="place_${place.epl_id}">${place.epl_name || 'Unnamed Place'}</label>
                         </li>
                     `;
                 });
-                html += '</ul>';
+                html += `
+                        <li>
+                            <input type="checkbox" id="place_all" ${all_are_checked?'checked':''}
+                                onchange="
+                                    let to_be = this.checked;
+                                    document.querySelectorAll('.place_checkbox').forEach(
+                                        chb => {
+                                            chb.checked = to_be;
+                                            toggleEventPlace(chb.id.slice(6), to_be);
+                                        }
+                                    );
+                                    ">
+                            <label for="place_all" style="font-weight:bold;">All</label>
+                        </li>
+                   </ul>`;
             }
             return html;
         }
