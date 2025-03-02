@@ -183,24 +183,12 @@
                     if (!localStorage.getItem('etp_ids')) {
                         const uniqueEtpIds = [...new Set(allEvents.map(event => event.etp_id))];
                         localStorage.setItem('etp_ids', JSON.stringify(uniqueEtpIds));
-                        uniqueEtpIds.forEach(etp_id => {
-                             let r = Math.floor(Math.random() * 56) + 200;
-                             let g = Math.floor(Math.random() * 56) + 200;
-                             let b = Math.floor(Math.random() * 56) + 200;
-                             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-                            localStorage.setItem('typeColor' + etp_id, color);
-                        });
+                        uniqueEtpIds.forEach(etp_id => localStorage.setItem('typeColor' + etp_id, randColor(200)));
                     }
                     if (!localStorage.getItem('epl_ids')) {
                         const uniqueEplIds = [...new Set(allEvents.map(event => event.epl_id))];
                         localStorage.setItem('epl_ids', JSON.stringify(uniqueEplIds));
-                        uniqueEplIds.forEach(epl_id => {
-                             let r = Math.floor(Math.random() * 156);
-                             let g = Math.floor(Math.random() * 156);
-                             let b = Math.floor(Math.random() * 156);
-                             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-                            localStorage.setItem('placeColor' + epl_id, color);
-                        });
+                        uniqueEplIds.forEach(epl_id => localStorage.setItem('placeColor' + epl_id, randColor(100)));
                     }
                     
                     updatePageTypesPlaces();
@@ -578,6 +566,14 @@
             localStorage.search_event = document.getElementById('search_event').value;
             updatePageTypesPlaces();
             updatePageEvents();
+        }
+
+        function randColor(color_base) {
+             let r = Math.floor(Math.random() * 56) + color_base;
+             let g = Math.floor(Math.random() * 56) + color_base;
+             let b = Math.floor(Math.random() * 56) + color_base;
+             let color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+             return color;
         }
 
     </script>
