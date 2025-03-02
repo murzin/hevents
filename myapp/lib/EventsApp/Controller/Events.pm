@@ -20,19 +20,21 @@ sub list {
         $_->{evt_to} = substr($_->{evt_to}, 0, 4);
         my $links = [];
         my $sth = $self->db->dbh->prepare(qq{
-            SELECT el.evt_id_2
+            SELECT el.evt_id_2, e.evt_name
             FROM event_links el
-            WHERE evt_id_1 = ?
+            LEFT JOIN events e on (e.evt_id = el.evt_id_2)
+            WHERE el.evt_id_1 = ?
         });
         $sth->execute($_->{evt_id});
-        push @$links, $_->[0] for @{ $sth->fetchall_arrayref };
+        push @$links, { $_->[0] => $_->[1] } for @{ $sth->fetchall_arrayref };
         $sth = $self->db->dbh->prepare(qq{
-            SELECT el.evt_id_1
+            SELECT el.evt_id_1, e.evt_name
             FROM event_links el
-            WHERE evt_id_2 = ?
+            LEFT JOIN events e on (e.evt_id = el.evt_id_1)
+            WHERE el.evt_id_2 = ?
         });
         $sth->execute($_->{evt_id});
-        push @$links, $_->[0] for @{ $sth->fetchall_arrayref };
+        push @$links, { $_->[0] => $_->[1] }  for @{ $sth->fetchall_arrayref };
         $_->{links} = $links;
     }
     $self->render(json => $arr);

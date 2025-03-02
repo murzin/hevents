@@ -145,7 +145,7 @@
 
             request.onupgradeneeded = function(event) {
                 const db = event.target.result;
-                db.createObjectStore('events', { keyPath: 'id', autoIncrement: true });
+                db.createObjectStore('events', { keyPath: 'evt_id', autoIncrement: false});
             };
 
             request.onsuccess = function(event) {
@@ -457,7 +457,7 @@
             let popupHeight = 400;
             let left = (screen.width - popupWidth) / 2;
             let top = (screen.height - popupHeight) / 2;
-            const popup = window.open('', 'ColorPicker', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no`);
+            const popup = window.open('', 'ColorPicker', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no,toolbar=no,menubar=no,location=no`);
             let html = `
         <html>
             <head>
@@ -523,7 +523,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                    <div style="text-align: center; margin-top: 20px;">
+                    <div style="text-align: center; margin: 20px;">
                         <button onclick="
                             window.opener.saveColors(window.document);
                             window.opener.updatePageTypesPlaces();
@@ -580,6 +580,85 @@
              return color;
         }
 
+        function eventInfo(evt_id) {
+            let request = indexedDB.open('EventsDB', 1);
+            request.onsuccess = function(event) {
+                let db = event.target.result;
+                let transaction = db.transaction(['events'], 'readonly');
+                let store = transaction.objectStore('events');
+                let getRequest = store.get(Number(evt_id));
+                getRequest.onsuccess = function() {
+                    if (getRequest.result) {
+                        //console.log("Event found:", getRequest.result);
+                        popupEvent(getRequest.result);
+                    } else {
+                        console.log("Event id ${evt_id} not found.");
+                    }
+                }
+            }
+        }
+
+        function popupEvent(event) {
+            let popupWidth = 840;
+            let popupHeight = 400;
+            let left = (screen.width - popupWidth) / 2;
+            let top = (screen.height - popupHeight) / 2;
+            const popup = window.open('', event.evt_name, `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no,toolbar=no,menubar=no,location=no`);
+            let html = `
+        <html>
+            <head>
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+            <style>
+                html, body {
+                    height: 100%;
+                    width: 100%;
+                    font-family: 'Poppins', sans-serif;
+                }
+                table {
+                    width: 100%;
+                    height: 100%;
+                    border-collapse: collapse;
+                }
+            </style>
+            </head>
+            <body>
+                <div style="padding: 10px;">
+                <table border=1>
+                    <tr>
+                        <td colspan=2>
+                    <h2 style="text-align: center;">${event.evt_name}</h2>
+                    <h3 style="text-align: center;">${event.evt_from == event.evt_to
+                            ? event.evt_from
+                            : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
+                            }</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
+                            <div style="text-align:left; margin:10px;">
+                                ${event.evt_desc}<br><br>
+                                <a href="${event.evt_url}" target="_blank">more info</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=2>
+                    <div style="text-align: center; margin: 20px;">
+                        <button onclick="
+                            window.close();
+                            " style="padding: 10px 20px;">Close</button>
+                    </div>
+                        </td>
+                    </tr>
+                </table>
+                </div>
+            </body>
+       </html>
+            `;
+
+            popup.document.write(html);
+            popup.document.close();
+        }
     </script>
     </body>
 </html>
