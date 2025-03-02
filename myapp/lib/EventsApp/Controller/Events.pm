@@ -18,6 +18,22 @@ sub list {
         $_->{evt_name} = decode_utf8($_->{evt_name});
         $_->{evt_from} = substr($_->{evt_from}, 0, 4);
         $_->{evt_to} = substr($_->{evt_to}, 0, 4);
+        my $links = [];
+        my $sth = $self->db->dbh->prepare(qq{
+            SELECT el.evt_id_2
+            FROM event_links el
+            WHERE evt_id_1 = ?
+        });
+        $sth->execute($_->{evt_id});
+        push @$links, $_->[0] for @{ $sth->fetchall_arrayref };
+        $sth = $self->db->dbh->prepare(qq{
+            SELECT el.evt_id_1
+            FROM event_links el
+            WHERE evt_id_2 = ?
+        });
+        $sth->execute($_->{evt_id});
+        push @$links, $_->[0] for @{ $sth->fetchall_arrayref };
+        $_->{links} = $links;
     }
     $self->render(json => $arr);
 
