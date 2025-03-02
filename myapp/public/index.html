@@ -546,8 +546,10 @@
             </body>
        </html>
             `;
-
             popup.document.write(html);
+            //popup.addEventListener("blur", function(event) {
+            //    popup.close();
+            //});
             popup.document.close();
         }
 
@@ -609,14 +611,6 @@
             let left = (screen.width - popupWidth) / 2;
             let top = (screen.height - popupHeight) / 2;
             const popup = window.open('', event.evt_name, `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable=no,scrollbars=no,toolbar=no,menubar=no,location=no`);
-            popup.addEventListener("blur", function(event) {
-                alert('sss');
-                popup.close();
-            });
-            popup.addEventListener("keydown", function(event) {
-                if (event.key === "Esc") {
-                    popup.close();
-            }});
             let html = `
         <html>
             <head>
@@ -703,8 +697,10 @@
             </body>
        </html>
             `;
-
             popup.document.write(html);
+            //popup.addEventListener("blur", function(event) {
+            //    popup.close();
+            //});
             popup.document.close();
         }
     </script>
