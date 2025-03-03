@@ -432,12 +432,8 @@
                     const startOffset = new Date(event.evt_from) - new Date(minFrom);
                     const endOffset = new Date(event.evt_to) - new Date(minFrom);
                     const startPercent = Math.round((startOffset / totalDuration) * 100);
-                    let durationPercent;
-                    if (startOffset == endOffset ) {
-                        durationPercent = 1;
-                    } else {
-                        durationPercent = Math.round(((endOffset - startOffset) / totalDuration) * 100);
-                    }
+                    let durationPercent = Math.round(((endOffset - startOffset) / totalDuration) * 100);
+                    if (durationPercent == 0) durationPercent = 1;
                     html += `
                         <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}"
                             onclick="eventInfo(${event.evt_id}); return false"
