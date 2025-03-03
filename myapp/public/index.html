@@ -84,8 +84,7 @@
             if (isFirstTime()) {
                 getAllREST();
             } else {
-                updatePageTypesPlaces();
-                updatePageEvents();
+                refreshWorkarea();
             }
         }
 
@@ -188,8 +187,7 @@
                         uniqueEplIds.forEach(epl_id => localStorage.setItem('placeColor' + epl_id, randColor(100)));
                     }
                     
-                    updatePageTypesPlaces();
-                    updatePageEvents();
+                    refreshWorkarea();
                 };
             };
         }
@@ -210,11 +208,11 @@
                         epl_ids.includes(event.epl_id)
                         &&
                         ( !!localStorage.getItem('evt_from')
-                            ? localStorage.getItem('evt_from') <= event.evt_from
+                            ? localStorage.getItem('evt_from') <= event.evt_to
                             : true )
                         &&
                         ( !!localStorage.getItem('evt_to')
-                            ? localStorage.getItem('evt_to') >= event.evt_to
+                            ? localStorage.getItem('evt_to') >= event.evt_from
                             : true )
                         &&
                         ( !!localStorage.getItem('search_event')
@@ -328,8 +326,7 @@
                 if (!currentEtpIds.includes(numericTypeId)) {
                     currentEtpIds.push(numericTypeId);
                     localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
-                    updatePageTypesPlaces();
-                    updatePageEvents();
+                    refreshWorkarea();
                 }
             } else {
                 currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
@@ -354,8 +351,7 @@
                 if (!currentEplIds.includes(numericPlaceId)) {
                     currentEplIds.push(numericPlaceId);
                     localStorage.setItem('epl_ids', JSON.stringify([...new Set(currentEplIds)]));
-                    updatePageTypesPlaces();
-                    updatePageEvents();
+                    refreshWorkarea();
                 }
             } else {
                 currentEplIds = currentEplIds.filter(id => id !== numericPlaceId);
@@ -603,14 +599,12 @@
         function setRange() {
             localStorage.evt_from = document.getElementById('evt_from').value;
             localStorage.evt_to = document.getElementById('evt_to').value;
-            updatePageTypesPlaces();
-            updatePageEvents();
+            refreshWorkarea();
         }
 
         function doSearch() {
             localStorage.search_event = document.getElementById('search_event').value;
-            updatePageTypesPlaces();
-            updatePageEvents();
+            refreshWorkarea();
         }
 
         function randColor(color_base) {
@@ -678,10 +672,16 @@
                     <tr id="headBlock">
                         <td colspan=2>
                     <h2 style="text-align: center;">${event.evt_name}</h2>
-                    <h3 style="text-align: center;">${event.evt_from == event.evt_to
+                    <h3 style="text-align: center;margin-bottom:5px;">${event.evt_from == event.evt_to
                             ? event.evt_from
                             : event.evt_from+'&nbsp;-&nbsp'+event.evt_to
                             }</h2>
+                            <div style="text-align:center;margin-bottom:15px;"><button onclick="
+                                localStorage.setItem('evt_from', ${event.evt_from});
+                                localStorage.setItem('evt_to', ${event.evt_to});
+                                window.opener.refreshWorkarea();
+                                window.close();
+                            ">what's around?</button></div>
                         </td>
                     </tr>
                     <tr>
@@ -736,6 +736,10 @@
             //    popup.close();
             //});
             popup.document.close();
+        }
+        function refreshWorkarea() {
+            updatePageTypesPlaces();
+            updatePageEvents();
         }
     </script>
     </body>
