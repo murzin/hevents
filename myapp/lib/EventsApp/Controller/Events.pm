@@ -59,7 +59,16 @@ sub create {
         $data->{etp_id},
         $data->{epl_id}
     );
-    $self->render(json => { id => $self->db->dbh->last_insert_id() });
+    my $id = $self->db->dbh->last_insert_id();
+    $sth = $self->db->dbh->prepare(qq{
+        INSERT INTO event_links
+        (evt_id_1, evt_id_2)
+        VALUES (?, ?)
+    });
+    for (@{ $data->{links} || [] }) {
+        $sth->execute($id, $_);
+    }
+    $self->render(json => { id => $id });
 }
 
 sub get {

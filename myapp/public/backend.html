@@ -163,13 +163,29 @@
                         {{ editingItem ? 'Edit' : 'Add' }} {{ getTabLabel(activeTab) }}
                     </h2>
                     <form @submit.prevent="submitForm">
+                        <template v-if="activeTab === 'event_types'">
                         <div class="mb-4">
                             <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
-                            <input type="text" v-model="formData.evt_name" 
+                            <input type="text" v-model="formData.etp_name"
                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150" 
                                    required>
                         </div>
+                        </template>
+                        <template v-if="activeTab === 'event_places'">
+                        <div class="mb-4">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" v-model="formData.epl_name"
+                                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150"
+                                   required>
+                        </div>
+                        </template>
                         <template v-if="activeTab === 'events'">
+                        <div class="mb-4">
+                            <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" v-model="formData.evt_name"
+                                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150"
+                                   required>
+                        </div>
                             <div class="mb-4">
                                 <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
                                 <textarea v-model="formData.evt_desc" 
