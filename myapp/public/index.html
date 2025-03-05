@@ -414,7 +414,12 @@
                 html = `<h2 style="margin:10px" >Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
                 html += '<div style="margin-left:10px" >';
 
-                const totalDuration = new Date(maxTo) - new Date(minFrom);
+                let totalDuration = new Date(maxTo) - new Date(minFrom);
+                let single_year = 0;
+                if (! totalDuration) {
+                    totalDuration = 1;
+                    single_year = 1;
+                }
 
                 let row_count = 0;
                 events.forEach(event => {
@@ -423,6 +428,7 @@
                     const startPercent = Math.round((startOffset / totalDuration) * 100);
                     let durationPercent = Math.round(((endOffset - startOffset) / totalDuration) * 100);
                     if (durationPercent == 0) durationPercent = 1;
+                    if (single_year == 1) durationPercent = 100;
                     html += `
                         <div class="event-row etp_id${event.etp_id || ''} epl_id${event.epl_id || ''}"
                             onclick="eventInfo(${event.evt_id}); return false"
