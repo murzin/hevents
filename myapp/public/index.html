@@ -70,10 +70,6 @@
         function main() {
             getEvents();
             document.getElementById('headBlock').innerHTML = Head();
-            document.getElementById("search_event").addEventListener("keydown", function(event) {
-                if (event.key === "Enter") {
-                    doSearch();
-                }});
             document.getElementById('menuBlock').innerHTML = Menu();
             setMenuFromToListeners();
             document.getElementById('workBlock').innerHTML = Work();
@@ -365,11 +361,8 @@
             return `
             <table><tr><td>
                 <h1 style="margin-left:10px;">People and Events</h1>
-              </td><td>  
-                <input type="text" name="search_event" id="search_event" value="${!!localStorage.search_event?localStorage.search_event:''}">
-                <button onclick="doSearch()" style="width:20px">>></button>
-                <button onclick="window.document.getElementById('search_event').value='';doSearch()" style="width:20px">X</button>
-            </td><tr></table>    
+              </td><td>&nbsp;
+              </td><tr></table>
             `;
         }
 
@@ -387,6 +380,9 @@
                         <br>
                     </td></tr>
                     <tr><td colspan="2">
+                        <input type="text" name="search_event" id="search_event" value="${!!localStorage.search_event?localStorage.search_event:''}" style="width:165px">
+                        <button onclick="doSearch()" style="width:20px">>></button>
+                        <button onclick="window.document.getElementById('search_event').value='';doSearch()" style="width:20px">X</button>
                         <br>
                         From: <input id="evt_from" style="width:50px" type="text" name="evt_from" value="${!!localStorage.evt_from?localStorage.evt_from:''}">
                         To: <input id="evt_to" style="width:50px" type="text" name="evt_to" value="${!!localStorage.evt_to?localStorage.evt_to:''}">
@@ -745,6 +741,10 @@
             updatePageEvents();
         }
         function setMenuFromToListeners() {
+            document.getElementById("search_event").addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    doSearch();
+                }});
             document.getElementById("evt_to").addEventListener("keydown", function(event) {
                 if (event.key === "Enter") {
                     setRange();
