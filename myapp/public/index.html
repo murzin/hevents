@@ -408,8 +408,8 @@
             if (events.length === 0) {
                 html = '<h2>Events</h2><p>No events available</p>';
             } else {
-                const minFrom = events.reduce((min, event) => event.evt_from < min ? event.evt_from : min, events[0].evt_from);
-                const maxTo = events.reduce((max, event) => event.evt_to > max ? event.evt_to : max, events[0].evt_to);
+                const minFrom = events.reduce((min, event) => Number(event.evt_from) < Number(min) ? event.evt_from : min, events[0].evt_from);
+                const maxTo = events.reduce((max, event) => Number(event.evt_to) > Number(max) ? event.evt_to : max, events[0].evt_to);
                 html = `<h2 style="margin:10px" >Events from ${minFrom || 'N/A'} to ${maxTo || 'N/A'}</h2>`;
                 html += '<div style="margin-left:10px" >';
 
