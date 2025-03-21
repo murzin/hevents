@@ -38,7 +38,7 @@
         .event-row {
             position: relative;
         }
-        a.event_link {
+        a.event_link, a.menu_title {
             color: black;
             text-decoration:none;
         }
@@ -238,7 +238,7 @@
         }
 
         function createTypesCheckboxes() {
-            let html = '<h3>Types</h3>';
+            let html = `<h3><a href="#" class="menu_title" onclick="toggleEventType('all', 'true'); return false;">Types</a></h3>`;
             const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
             
             if (eventTypes.length === 0) {
@@ -269,7 +269,7 @@
         }
 
         function createPlaceCheckboxes() {
-            let html = '<h3>Places</h3>';
+            let html = `<h3><a href="#" class="menu_title" onclick="toggleEventPlace('all', 'true'); return false;">Places</a></h3>`;
             const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
             
             if (eventPlaces.length === 0) {
