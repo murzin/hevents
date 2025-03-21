@@ -199,6 +199,7 @@
 
                 getAllRequest.onsuccess = function() {
                     const allEvents = getAllRequest.result;
+                    db.close();
                     events = allEvents.filter(event =>
                         etp_ids.includes(event.etp_id) && 
                         epl_ids.includes(event.epl_id)
@@ -217,7 +218,23 @@
                                 .includes(localStorage.getItem('search_event').toLowerCase())
                             : true )
                     );
-                    db.close();
+                    events.sort((a, b) => {
+                        const sort = localStorage.sortBy || 'none';
+                        switch (sort) {
+                            case 'name':
+                                return a.evt_name.localeCompare(b.evt_name);
+                            case 'asc':
+                                return Number(a.evt_from.slice(0,4)) - Number(b.evt_from.slice(0,4));
+                            case 'desc':
+                                return Number(b.evt_from.slice(0,4)) - Number(a.evt_from.slice(0,4));
+                            case 'rand':
+                                return 0.5 - Math.random();
+                            case 'none':
+                                return 0;
+                            default:
+                                return 0;
+                        }
+                    });
                     document.getElementById('menuBlock').innerHTML = Menu();
                     setMenuFromToListeners();
                     document.getElementById('workBlock').innerHTML = Work();
@@ -499,8 +516,18 @@
                     <tr><td colspan="2">
                         <br>
                         <button onclick="getAllREST()">Reload Events</button>
-                        &nbsp;&nbsp;
+                        &nbsp;
                         <button onclick="popupColors()">Colors</button>
+                        &nbsp;
+                        <select id="orderBy" onchange="
+                            localStorage.sortBy = this.options[this.selectedIndex].getAttribute('name');
+                            updatePageEvents();
+                        ">
+                            <option name="none" ${localStorage.sortBy=='none'?'selected':''}>unsrt</option>
+                            <option name="name" ${localStorage.sortBy=='name'?'selected':''}>name</option>
+                            <option name="asc" ${localStorage.sortBy=='asc'?'selected':''}>asc</option>
+                            <option name="desc" ${localStorage.sortBy=='desc'?'selected':''}>desc</option>
+                        </select>
                         <br>
                     </td></tr>
                     <tr><td colspan="2">
