@@ -80,7 +80,7 @@
             if (isFirstTime()) {
                 getAllREST();
             } else {
-                refreshWorkarea();
+                reloadFromLocalStorage();
             }
         }
 
@@ -183,7 +183,7 @@
                         uniqueEplIds.forEach(epl_id => localStorage.setItem('placeColor' + epl_id, randColor(100)));
                     }
                     
-                    refreshWorkarea();
+                    reloadFromLocalStorage();
                 };
             };
         }
@@ -204,11 +204,11 @@
                         epl_ids.includes(event.epl_id)
                         &&
                         ( !!localStorage.getItem('evt_from')
-                            ? localStorage.getItem('evt_from') <= event.evt_to
+                            ? Number(localStorage.getItem('evt_from')) <= Number(event.evt_to)
                             : true )
                         &&
                         ( !!localStorage.getItem('evt_to')
-                            ? localStorage.getItem('evt_to') >= event.evt_from
+                            ? Number(localStorage.getItem('evt_to')) >= Number(event.evt_from)
                             : true )
                         &&
                         ( !!localStorage.getItem('search_event')
@@ -260,15 +260,7 @@
                 html += `
                         <li>
                             <input type="checkbox" id="type_all" ${all_are_checked?'checked':''}
-                                onchange="
-                                    let to_be = this.checked;
-                                    document.querySelectorAll('.type_checkbox').forEach(
-                                        chb => {
-                                            chb.checked = to_be;
-                                            toggleEventType(chb.id.slice(5), to_be);
-                                        }
-                                    );
-                                    ">
+                                onchange="toggleEventType('all', this.checked)">
                             <label for="type_all" style="font-weight:bold;">All</label>
                         </li>
                    </ul>`;
@@ -294,20 +286,12 @@
                                 onchange="toggleEventPlace('${place.epl_id}', this.checked)">
                             <label for="place_${place.epl_id}">${place.epl_name || 'Unnamed Place'}</label>
                         </li>
-                    `;
+                `;
                 });
                 html += `
                         <li>
                             <input type="checkbox" id="place_all" ${all_are_checked?'checked':''}
-                                onchange="
-                                    let to_be = this.checked;
-                                    document.querySelectorAll('.place_checkbox').forEach(
-                                        chb => {
-                                            chb.checked = to_be;
-                                            toggleEventPlace(chb.id.slice(6), to_be);
-                                        }
-                                    );
-                                    ">
+                                onchange="toggleEventPlace('all', this.checked)">
                             <label for="place_all" style="font-weight:bold;">All</label>
                         </li>
                    </ul>`;
@@ -315,45 +299,181 @@
             return html;
         }
 
+        let type_state = 0;
+        let type_in_blick = 0;
         function toggleEventType(typeId, isChecked) {
-            const numericTypeId = Number(typeId);
-            let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
-            
-            if (isChecked) {
-                if (!currentEtpIds.includes(numericTypeId)) {
-                    currentEtpIds.push(numericTypeId);
-                    localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
-                    refreshWorkarea();
-                }
-            } else {
-                currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
-                localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
+            if (typeId === 'all') {
+                let ids = [];
+                document.querySelectorAll('.type_checkbox').forEach(
+                    checkbox => {
+                        checkbox.checked = isChecked;
+                        ids.push(Number(checkbox.id.slice(5)));
+                    }
+                );
+                toggleEventType_r(ids, isChecked);
+                return;
             }
 
-            const rows = document.querySelectorAll(`.etp_id${numericTypeId}`);
-            rows.forEach(row => {
-                row.style.display = isChecked ? 'flex' : 'none';
+            if ( ! type_state) {
+                let is_all_checked = 1;
+                let was_all_checked = document.getElementById("type_all").checked;
+                document.querySelectorAll('.type_checkbox').forEach(
+                    checkbox => {
+                        if ( ! checkbox.checked) is_all_checked = 0;
+                    }
+                );
+                typeId = Number(typeId);
+                document.getElementById("type_all").checked = is_all_checked;
+                toggleEventType_r([typeId], isChecked);
+                if (was_all_checked && ! isChecked && ! type_state) {
+                    type_state = 1;
+                    type_in_blick = typeId;
+                }
+                return;
+            }
+
+            if (type_state == 1 && type_in_blick == typeId) {
+                type_state = 2;
+                let ids = [];
+                document.querySelectorAll('.type_checkbox').forEach(
+                    checkbox => {
+                        let id = Number(checkbox.id.slice(5));
+                        if ( id != type_in_blick) {
+                            checkbox.checked = false;
+                            ids.push(id);
+                        }
+                    }
+                );
+                toggleEventType_r(ids, false);
+                toggleEventType_r([type_in_blick], true);
+                return;
+            }
+            if (type_state == 2 && type_in_blick == typeId) {
+                type_state = 0;
+                type_in_blick = 0;
+                let ids = [];
+                document.querySelectorAll('.type_checkbox').forEach(
+                    checkbox => {
+                        let id = Number(checkbox.id.slice(5));
+                        checkbox.checked = true;
+                        ids.push(id);
+                    }
+                );
+                toggleEventType_r(ids, true);
+                document.getElementById("type_all").checked = true;
+                return;
+            }
+            type_state = 0;
+            type_in_blick = 0;
+        }
+
+        function toggleEventType_r (typeIds, isChecked) {
+            let currentEtpIds = JSON.parse(localStorage.getItem('etp_ids') || '[]');
+            typeIds.forEach(numericTypeId => {
+                if (isChecked) {
+                    if (!currentEtpIds.includes(numericTypeId)) {
+                        currentEtpIds.push(numericTypeId);
+                        localStorage.setItem('etp_ids', JSON.stringify([...new Set(currentEtpIds)]));
+                        // update directly etp_ids?
+                        reloadFromLocalStorage();
+                    }
+                } else {
+                    currentEtpIds = currentEtpIds.filter(id => id !== numericTypeId);
+                    localStorage.setItem('etp_ids', JSON.stringify(currentEtpIds));
+                }
+
+                document.querySelectorAll(`.etp_id${numericTypeId}`).forEach(row => {
+                    row.style.display = isChecked ? 'flex' : 'none';
+                });
             });
         }
 
+        let place_state = 0;
+        let place_in_blick = 0;
         function toggleEventPlace(placeId, isChecked) {
-            const numericPlaceId = Number(placeId);
-            let currentEplIds = JSON.parse(localStorage.getItem('epl_ids') || '[]');
-            
-            if (isChecked) {
-                if (!currentEplIds.includes(numericPlaceId)) {
-                    currentEplIds.push(numericPlaceId);
-                    localStorage.setItem('epl_ids', JSON.stringify([...new Set(currentEplIds)]));
-                    refreshWorkarea();
-                }
-            } else {
-                currentEplIds = currentEplIds.filter(id => id !== numericPlaceId);
-                localStorage.setItem('epl_ids', JSON.stringify(currentEplIds));
+            if (placeId === 'all') {
+                let ids = [];
+                document.querySelectorAll('.place_checkbox').forEach(
+                    checkbox => {
+                        checkbox.checked = isChecked;
+                        ids.push(Number(checkbox.id.slice(6)));
+                    }
+                );
+                toggleEventPlace_r(ids, isChecked);
+                return;
             }
 
-            const rows = document.querySelectorAll(`.epl_id${numericPlaceId}`);
-            rows.forEach(row => {
-                row.style.display = isChecked ? 'flex' : 'none';
+            if ( ! place_state) {
+                let is_all_checked = 1;
+                let was_all_checked = document.getElementById("place_all").checked;
+                document.querySelectorAll('.place_checkbox').forEach(
+                    checkbox => {
+                        if ( ! checkbox.checked) is_all_checked = 0;
+                    }
+                );
+                placeId = Number(placeId);
+                document.getElementById("place_all").checked = is_all_checked;
+                toggleEventPlace_r([placeId], isChecked);
+                if (was_all_checked && ! isChecked && ! place_state) {
+                    place_state = 1;
+                    place_in_blick = placeId;
+                }
+                return;
+            }
+
+            if (place_state == 1 && place_in_blick == placeId) {
+                place_state = 2;
+                let ids = [];
+                document.querySelectorAll('.place_checkbox').forEach(
+                    checkbox => {
+                        let id = Number(checkbox.id.slice(6));
+                        if ( id != place_in_blick) {
+                            checkbox.checked = false;
+                            ids.push(id);
+                        }
+                    }
+                );
+                toggleEventPlace_r(ids, false);
+                toggleEventPlace_r([place_in_blick], true);
+                return;
+            }
+            if (place_state == 2 && place_in_blick == placeId) {
+                place_state = 0;
+                place_in_blick = 0;
+                let ids = [];
+                document.querySelectorAll('.place_checkbox').forEach(
+                    checkbox => {
+                        let id = Number(checkbox.id.slice(6));
+                        checkbox.checked = true;
+                        ids.push(id);
+                    }
+                );
+                toggleEventPlace_r(ids, true);
+                document.getElementById("place_all").checked = true;
+                return;
+            }
+            place_state = 0;
+            place_in_blick = 0;
+        }
+
+        function toggleEventPlace_r (placeIds, isChecked) {
+            let currentEplIds = JSON.parse(localStorage.getItem('epl_ids') || '[]');
+            placeIds.forEach(numericPlaceId => {
+                if (isChecked) {
+                    if (!currentEplIds.includes(numericPlaceId)) {
+                        currentEplIds.push(numericPlaceId);
+                        localStorage.setItem('epl_ids', JSON.stringify([...new Set(currentEplIds)]));
+                        // update directly epl_ids?
+                        reloadFromLocalStorage();
+                    }
+                } else {
+                    currentEplIds = currentEplIds.filter(id => id !== numericPlaceId);
+                    localStorage.setItem('epl_ids', JSON.stringify(currentEplIds));
+                }
+
+                document.querySelectorAll(`.epl_id${numericPlaceId}`).forEach(row => {
+                    row.style.display = isChecked ? 'flex' : 'none';
+                });
             });
         }
 
@@ -597,12 +717,12 @@
         function setRange() {
             localStorage.evt_from = document.getElementById('evt_from').value;
             localStorage.evt_to = document.getElementById('evt_to').value;
-            refreshWorkarea();
+            reloadFromLocalStorage();
         }
 
         function doSearch() {
             localStorage.search_event = document.getElementById('search_event').value;
-            refreshWorkarea();
+            reloadFromLocalStorage();
         }
 
         function randColor(color_base) {
@@ -678,7 +798,7 @@
                                 localStorage.setItem('evt_from', ${event.evt_from});
                                 localStorage.setItem('evt_to', ${event.evt_to});
                                 localStorage.setItem('search_event', '');
-                                window.opener.refreshWorkarea();
+                                window.opener.reloadFromLocalStorage();
                                 window.close();
                             ">what's around?</button></div>
                         </td>
@@ -736,7 +856,8 @@
             //});
             popup.document.close();
         }
-        function refreshWorkarea() {
+        function reloadFromLocalStorage() {
+            // loads code events, etp_ids, epl_ids from localStorage
             updatePageTypesPlaces();
             updatePageEvents();
         }
