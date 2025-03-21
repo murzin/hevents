@@ -316,6 +316,8 @@
 
             typeId = Number(typeId);
             if ( ! type_state || type_in_blick != typeId) {
+                type_state = 0;
+                type_in_blick = 0;
                 let is_all_checked = 1;
                 let was_all_checked = document.getElementById("type_all").checked;
                 document.querySelectorAll('.type_checkbox').forEach(
@@ -405,6 +407,8 @@
 
             placeId = Number(placeId);
             if ( ! place_state || place_in_blick != placeId) {
+                place_state = 0;
+                place_in_blick = 0;
                 let is_all_checked = 1;
                 let was_all_checked = document.getElementById("place_all").checked;
                 document.querySelectorAll('.place_checkbox').forEach(
