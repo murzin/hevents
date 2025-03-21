@@ -314,7 +314,8 @@
                 return;
             }
 
-            if ( ! type_state) {
+            typeId = Number(typeId);
+            if ( ! type_state || type_in_blick != typeId) {
                 let is_all_checked = 1;
                 let was_all_checked = document.getElementById("type_all").checked;
                 document.querySelectorAll('.type_checkbox').forEach(
@@ -322,7 +323,6 @@
                         if ( ! checkbox.checked) is_all_checked = 0;
                     }
                 );
-                typeId = Number(typeId);
                 document.getElementById("type_all").checked = is_all_checked;
                 toggleEventType_r([typeId], isChecked);
                 if (was_all_checked && ! isChecked && ! type_state) {
@@ -403,7 +403,8 @@
                 return;
             }
 
-            if ( ! place_state) {
+            placeId = Number(placeId);
+            if ( ! place_state || place_in_blick != placeId) {
                 let is_all_checked = 1;
                 let was_all_checked = document.getElementById("place_all").checked;
                 document.querySelectorAll('.place_checkbox').forEach(
@@ -411,7 +412,6 @@
                         if ( ! checkbox.checked) is_all_checked = 0;
                     }
                 );
-                placeId = Number(placeId);
                 document.getElementById("place_all").checked = is_all_checked;
                 toggleEventPlace_r([placeId], isChecked);
                 if (was_all_checked && ! isChecked && ! place_state) {
