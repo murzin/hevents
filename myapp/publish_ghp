@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+git checkout gh_pages
+git merge main -m 'publishing to ghp'
+cp public/index.html ../docs/
+curl http://127.1:3000/api/events -o ../docs/events.json
+curl http://127.1:3000/api/event_types -o ../docs/event_types.json
+curl http://127.1:3000/api/event_places -o ../docs/event_places.json
+git commit -am 'publishing'
+git push
+git checkout main
