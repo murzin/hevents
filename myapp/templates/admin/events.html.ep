@@ -1,0 +1,72 @@
+% layout 'admin';
+% title 'Events';
+<section class="page-heading">
+  <div><p class="eyebrow">Archive</p><h1>Events</h1><p><%= $pager->{total} %> records in the collection.</p></div>
+  <a class="button primary" href="/admin/events/new">Add event</a>
+</section>
+<section class="panel filters-panel">
+  <form method="get" action="/admin/events" class="filters-form">
+    <label class="search-field">Search by event name
+      <input type="search" name="q" value="<%= $filters->{q} // '' %>" placeholder="e.g. Renaissance">
+    </label>
+    <label>Type
+      <select name="etp_id">
+        <option value="">All types</option>
+        % for my $row (@$types) {
+          <option value="<%= $row->{etp_id} %>" <%= 'selected' if ($filters->{etp_id} // '') eq $row->{etp_id} %>><%= $row->{etp_name} %></option>
+        % }
+      </select>
+    </label>
+    <label>Place
+      <select name="epl_id">
+        <option value="">All places</option>
+        % for my $row (@$places) {
+          <option value="<%= $row->{epl_id} %>" <%= 'selected' if ($filters->{epl_id} // '') eq $row->{epl_id} %>><%= $row->{epl_name} %></option>
+        % }
+      </select>
+    </label>
+    <label>Period
+      <select name="epr_id">
+        <option value="">All periods</option>
+        % for my $row (@$periods) {
+          <option value="<%= $row->{epr_id} %>" <%= 'selected' if ($filters->{epr_id} // '') eq $row->{epr_id} %>><%= $row->{epr_name} %></option>
+        % }
+      </select>
+    </label>
+    <div class="filter-actions">
+      <button class="button primary" type="submit">Apply filters</button>
+      <a class="button subtle" href="/admin/events">Reset</a>
+    </div>
+  </form>
+</section>
+<section class="panel table-panel">
+  % unless (@$events) {
+    <p class="empty">No events match these filters.</p>
+  % }
+  % if (@$events) {
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Event</th><th>Range</th><th>Type</th><th>Place</th><th>Period</th><th></th></tr></thead>
+      <tbody>
+      % for my $event (@$events) {
+        <tr>
+          <td class="muted">#<%= $event->{evt_id} %></td>
+          <td><strong><%= $event->{evt_name} %></strong><small><%= $event->{evt_desc} %></small></td>
+          <td><%= $event->{evt_from} %><span class="arrow">→</span><%= $event->{evt_to} %></td>
+          <td><span class="pill"><%= $event->{etp_name} %></span></td>
+          <td><%= $event->{epl_name} %></td>
+          <td><%= $event->{epr_name} %></td>
+          <td class="actions">
+            <a class="button subtle" href="/admin/events/<%= $event->{evt_id} %>/edit">Edit</a>
+            <form method="post" action="/admin/events/<%= $event->{evt_id} %>/delete">
+              <button class="button danger" type="submit" onclick="return confirm('Delete this event?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+      % }
+      </tbody>
+    </table>
+  </div>
+  % }
+  <%= include 'admin/pagination', pager => $pager, path => $path %>
+</section>

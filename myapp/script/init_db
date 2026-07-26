@@ -1,0 +1,78 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use DBI;
+use FindBin qw($Bin);
+use File::Spec;
+
+my $db_file = $ENV{HEVENTS_DB} // File::Spec->catfile($Bin, '..', 'db', 'hevents.db');
+my $schema_file = File::Spec->catfile($Bin, '..', '..', 'DDL', 'ddl.sql');
+
+open my $schema_fh, '<:encoding(UTF-8)', $schema_file
+  or die "Cannot read $schema_file: $!\n";
+local $/;
+my $schema = <$schema_fh>;
+close $schema_fh;
+
+my $dbh = DBI->connect(
+  "dbi:SQLite:dbname=$db_file", '', '',
+  {RaiseError => 1, PrintError => 0}
+);
+
+# Upgrade databases created by the first release without losing event data.
+my ($events_exists) = $dbh->selectrow_array(
+  q{SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'events'}
+);
+if ($events_exists) {
+  my $columns = $dbh->selectall_hashref('PRAGMA table_info(events)', 'name');
+  if (!$columns->{epr_id}) {
+    $dbh->do(q{
+      CREATE TABLE IF NOT EXISTS event_periods (
+        epr_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        epr_name TEXT NOT NULL UNIQUE
+      )
+    });
+    $dbh->do(q{INSERT OR IGNORE INTO event_periods (epr_name) VALUES ('Unspecified')});
+    my ($default_period) = $dbh->selectrow_array(
+      q{SELECT epr_id FROM event_periods WHERE epr_name = 'Unspecified'}
+    );
+    $dbh->do(
+      'ALTER TABLE events ADD COLUMN epr_id INTEGER REFERENCES event_periods(epr_id)'
+    );
+    $dbh->do('UPDATE events SET epr_id = ? WHERE epr_id IS NULL', undef, $default_period);
+  }
+}
+
+# Rebuild event_links when upgrading from the version that used cascading
+# foreign keys and enforced evt_id_1 < evt_id_2.
+my ($event_links_sql) = $dbh->selectrow_array(
+  q{SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'event_links'}
+);
+if (defined $event_links_sql
+    && ($event_links_sql =~ /\bON\s+DELETE\b/i || $event_links_sql =~ /\bCHECK\s*\(/i)) {
+  $dbh->begin_work;
+  eval {
+    $dbh->do('ALTER TABLE event_links RENAME TO event_links_old');
+    $dbh->do(q{
+      CREATE TABLE event_links (
+        evt_id_1 INTEGER NOT NULL REFERENCES events(evt_id),
+        evt_id_2 INTEGER NOT NULL REFERENCES events(evt_id),
+        PRIMARY KEY (evt_id_1, evt_id_2)
+      )
+    });
+    $dbh->do(q{
+      INSERT INTO event_links (evt_id_1, evt_id_2)
+      SELECT evt_id_1, evt_id_2 FROM event_links_old
+    });
+    $dbh->do('DROP TABLE event_links_old');
+    $dbh->commit;
+    1;
+  } or do {
+    my $error = $@ || 'Unknown event_links migration error';
+    eval { $dbh->rollback };
+    die $error;
+  };
+}
+
+$dbh->do($_) for grep { /\S/ } split /;/, $schema;
+print "Initialized $db_file\n";

@@ -1,0 +1,29 @@
+% layout 'admin';
+% title 'Dashboard';
+<section class="hero">
+  <div>
+    <p class="eyebrow">Content operations</p>
+    <h1>Historical events, clearly managed.</h1>
+    <p>Maintain the event archive, its taxonomy, periods, places, and relationships from one workspace.</p>
+  </div>
+  <a class="button primary" href="/admin/events/new">Add event</a>
+</section>
+<section class="stats" aria-label="Database summary">
+  <a href="/admin/events"><strong><%= $counts->{events} %></strong><span>Events</span></a>
+  <a href="/admin/event_types"><strong><%= $counts->{event_types} %></strong><span>Types</span></a>
+  <a href="/admin/event_places"><strong><%= $counts->{event_places} %></strong><span>Places</span></a>
+  <a href="/admin/event_periods"><strong><%= $counts->{event_periods} %></strong><span>Periods</span></a>
+  <a href="/admin/event-links"><strong><%= $counts->{event_links} %></strong><span>Links</span></a>
+</section>
+<section class="panel">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Quick access</p><h2>Manage the collection</h2></div>
+  </div>
+  <div class="cards">
+    <a href="/admin/events"><b>Events</b><span>Edit names, descriptions, dates, URLs, and classifications.</span></a>
+    <a href="/admin/event_types"><b>Types</b><span>Organize the collection into consistent event categories.</span></a>
+    <a href="/admin/event_places"><b>Places</b><span>Maintain the geographic vocabulary used by events.</span></a>
+    <a href="/admin/event_periods"><b>Periods</b><span>Define the historical periods applied across the archive.</span></a>
+    <a href="/admin/event-links"><b>Relationships</b><span>Connect related events into an explorable historical graph.</span></a>
+  </div>
+</section>

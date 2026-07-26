@@ -1,0 +1,33 @@
+% layout 'admin';
+% title $title;
+<section class="page-heading">
+  <div><p class="eyebrow">Taxonomy</p><h1><%= $title %></h1></div>
+</section>
+<section class="split">
+  <div class="panel">
+    <div class="panel-heading"><h2>All <%= lc $title %></h2><span class="count"><%= $pager->{total} %></span></div>
+    <div class="stack">
+      % for my $row (@$rows) {
+        <form class="inline-record" method="post" action="<%= $path %>/<%= $row->{$id_col} %>">
+          <span class="record-id">#<%= $row->{$id_col} %></span>
+          <input name="<%= $name_col %>" value="<%= $row->{$name_col} %>" aria-label="<%= $singular %> name" required>
+          <button class="button subtle" type="submit">Save</button>
+          <button class="button danger" type="submit" formaction="<%= $path %>/<%= $row->{$id_col} %>/delete"
+            onclick="return confirm('Delete this <%= $singular %>?')">Delete</button>
+        </form>
+      % }
+      % unless (@$rows) {
+        <p class="empty">No records yet.</p>
+      % }
+    </div>
+    <%= include 'admin/pagination', pager => $pager, path => $path %>
+  </div>
+  <aside class="panel form-panel">
+    <p class="eyebrow">Create</p>
+    <h2>New <%= $singular %></h2>
+    <form method="post" action="<%= $path %>">
+      <label>Name<input name="<%= $name_col %>" required autofocus></label>
+      <button class="button primary" type="submit">Create <%= $singular %></button>
+    </form>
+  </aside>
+</section>

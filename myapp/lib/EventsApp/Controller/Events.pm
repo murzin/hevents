@@ -17,8 +17,13 @@ sub list {
     for (@$arr) {
         $_->{evt_name} = decode_utf8($_->{evt_name});
         $_->{evt_desc} = decode_utf8($_->{evt_desc});
-        $_->{evt_from} = substr($_->{evt_from}, 0, 4);
-        $_->{evt_to} = substr($_->{evt_to}, 0, 4);
+        my $from_minus = 0;
+        my $to_minus = 0;
+# TODO more pricisious parsing for years
+        substr($_->{evt_from}, 0, 1) eq '-' and $from_minus = 1;
+        substr($_->{evt_to}, 0, 1) eq '-' and $to_minus = 1;
+        $_->{evt_from} = substr($_->{evt_from}, 0, 4 + $from_minus);
+        $_->{evt_to} = substr($_->{evt_to}, 0, 4 + $to_minus);
         my $links = [];
         my $sth = $self->db->dbh->prepare(qq{
             SELECT el.evt_id_2, e.evt_name
@@ -47,8 +52,8 @@ sub create {
     my $data = $self->req->json;
     my $sth = $self->db->dbh->prepare(qq{
         INSERT INTO events 
-        (evt_name, evt_desc, evt_url, evt_from, evt_to, etp_id, epl_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (evt_name, evt_desc, evt_url, evt_from, evt_to, etp_id, epl_id, epr_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     });
     $sth->execute(
         $data->{evt_name},
@@ -57,7 +62,8 @@ sub create {
         $data->{evt_from},
         $data->{evt_to},
         $data->{etp_id},
-        $data->{epl_id}
+        $data->{epl_id},
+        $data->{epr_id}
     );
     my $id = $self->db->dbh->last_insert_id();
     $sth = $self->db->dbh->prepare(qq{
@@ -78,6 +84,7 @@ sub get {
         FROM events e
         JOIN event_types et ON e.etp_id = et.etp_id
         JOIN event_places ep ON e.epl_id = ep.epl_id
+        JOIN event_periods er ON e.epr_id = er.epr_id
         WHERE e.evt_id = ?
     });
     $sth->execute($self->param('id'));

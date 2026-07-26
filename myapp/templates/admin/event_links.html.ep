@@ -1,0 +1,40 @@
+% layout 'admin';
+% title 'Event links';
+<section class="page-heading">
+  <div><p class="eyebrow">Relationships</p><h1>Event links</h1><p>Connect two related moments in the archive.</p></div>
+</section>
+<section class="split links-layout">
+  <div class="panel">
+    <div class="panel-heading"><h2>Linked events</h2><span class="count"><%= $pager->{total} %></span></div>
+    <div class="stack">
+      % for my $link (@$links) {
+        <div class="link-record">
+          <div><strong><%= $link->{evt_name_1} %></strong><span>is linked to</span><strong><%= $link->{evt_name_2} %></strong></div>
+          <form method="post" action="/admin/event-links/<%= $link->{evt_id_1} %>/<%= $link->{evt_id_2} %>/delete">
+            <button class="button danger" type="submit" onclick="return confirm('Remove this link?')">Remove</button>
+          </form>
+        </div>
+      % }
+      % unless (@$links) {
+        <p class="empty">No links yet.</p>
+      % }
+    </div>
+    <%= include 'admin/pagination', pager => $pager, path => $path %>
+  </div>
+  <aside class="panel form-panel">
+    <p class="eyebrow">Create</p><h2>Link two events</h2>
+    <form method="post" action="/admin/event-links">
+      <label>First event<select name="evt_id_1" required>
+        % for my $event (@$events) {
+          <option value="<%= $event->{evt_id} %>"><%= $event->{evt_name} %></option>
+        % }
+      </select></label>
+      <label>Second event<select name="evt_id_2" required>
+        % for my $event (@$events) {
+          <option value="<%= $event->{evt_id} %>"><%= $event->{evt_name} %></option>
+        % }
+      </select></label>
+      <button class="button primary" type="submit">Create link</button>
+    </form>
+  </aside>
+</section>

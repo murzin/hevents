@@ -1,33 +1,42 @@
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS event_types (
-    etp_id INTEGER PRIMARY KEY,
-    etp_name TEXT NOT NULL
+  etp_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  etp_name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS event_places (
-    epl_id INTEGER PRIMARY KEY,
-    epl_name TEXT NOT NULL
+  epl_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  epl_name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS event_periods (
+  epr_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  epr_name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS events (
-    evt_id INTEGER PRIMARY KEY,
-    evt_name TEXT NOT NULL,
-    evt_desc TEXT,
-    evt_url  TEXT,
-    evt_from TEXT NOT NULL,
-    evt_to   TEXT NOT NULL,
-    etp_id INTEGER NOT NULL,
-    epl_id INTEGER NOT NULL,
-    FOREIGN KEY (etp_id) REFERENCES event_types(etp_id) ON DELETE CASCADE,
-    FOREIGN KEY (epl_id) REFERENCES event_places(epl_id) ON DELETE CASCADE
+  evt_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  evt_name TEXT NOT NULL,
+  evt_desc TEXT NOT NULL,
+  evt_url  TEXT NOT NULL,
+  evt_from TEXT NOT NULL,
+  evt_to   TEXT NOT NULL,
+  etp_id   INTEGER NOT NULL REFERENCES event_types(etp_id),
+  epl_id   INTEGER NOT NULL REFERENCES event_places(epl_id),
+  epr_id   INTEGER NOT NULL REFERENCES event_periods(epr_id)
 );
 
 CREATE TABLE IF NOT EXISTS event_links (
-    evt_id_1 INTEGER NOT NULL,
-    evt_id_2 INTEGER NOT NULL,
-    PRIMARY KEY (evt_id_1, evt_id_2),
-    FOREIGN KEY (evt_id_1) REFERENCES events(evt_id) ON DELETE CASCADE,
-    FOREIGN KEY (evt_id_2) REFERENCES events(evt_id) ON DELETE CASCADE
+  evt_id_1 INTEGER NOT NULL REFERENCES events(evt_id),
+  evt_id_2 INTEGER NOT NULL REFERENCES events(evt_id),
+  PRIMARY KEY (evt_id_1, evt_id_2)
 );
 
+CREATE INDEX IF NOT EXISTS events_etp_id_idx ON events(etp_id);
+CREATE INDEX IF NOT EXISTS events_epl_id_idx ON events(epl_id);
+CREATE INDEX IF NOT EXISTS events_epr_id_idx ON events(epr_id);
+CREATE INDEX IF NOT EXISTS events_evt_id_idx ON events(evt_id);
+CREATE INDEX IF NOT EXISTS event_links_evt_ids_idx
+  ON event_links(evt_id_1, evt_id_2);
+DROP INDEX IF EXISTS event_links_evt_id_2_idx;

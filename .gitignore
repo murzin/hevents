@@ -3,3 +3,7 @@ docs/prompt.txt
 docs/frontend-prompts.md
 myapp/public/index_*
 myapp/.DS_Store
+<<<<<<< HEAD
+=======
+.DS_Store
+>>>>>>> main

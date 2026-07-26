@@ -1,0 +1,31 @@
+% layout 'admin';
+% title $form_title;
+<section class="page-heading">
+  <div><p class="eyebrow">Archive</p><h1><%= $form_title %></h1></div>
+  <a class="button subtle" href="/admin/events">Back to events</a>
+</section>
+<section class="panel form-panel wide">
+  <form method="post" action="<%= $form_action %>" class="event-form">
+    <label class="span-2">Name<input name="evt_name" value="<%= $event->{evt_name} // '' %>" required autofocus></label>
+    <label class="span-2">Description<textarea name="evt_desc" rows="4" required><%= $event->{evt_desc} // '' %></textarea></label>
+    <label class="span-2">URL<input name="evt_url" type="url" value="<%= $event->{evt_url} // '' %>" required></label>
+    <label>From<input name="evt_from" value="<%= $event->{evt_from} // '' %>" required></label>
+    <label>To<input name="evt_to" value="<%= $event->{evt_to} // '' %>" required></label>
+    <label>Type<select name="etp_id" required>
+      % for my $row (@$types) {
+        <option value="<%= $row->{etp_id} %>" <%= 'selected' if ($event->{etp_id} // '') eq $row->{etp_id} %>><%= $row->{etp_name} %></option>
+      % }
+    </select></label>
+    <label>Place<select name="epl_id" required>
+      % for my $row (@$places) {
+        <option value="<%= $row->{epl_id} %>" <%= 'selected' if ($event->{epl_id} // '') eq $row->{epl_id} %>><%= $row->{epl_name} %></option>
+      % }
+    </select></label>
+    <label class="span-2">Period<select name="epr_id" required>
+      % for my $row (@$periods) {
+        <option value="<%= $row->{epr_id} %>" <%= 'selected' if ($event->{epr_id} // '') eq $row->{epr_id} %>><%= $row->{epr_name} %></option>
+      % }
+    </select></label>
+    <div class="span-2 form-actions"><button class="button primary" type="submit">Save event</button></div>
+  </form>
+</section>
