@@ -17,13 +17,8 @@ sub list {
     for (@$arr) {
         $_->{evt_name} = decode_utf8($_->{evt_name});
         $_->{evt_desc} = decode_utf8($_->{evt_desc});
-        my $from_minus = 0;
-        my $to_minus = 0;
-# TODO more pricisious parsing for years
-        substr($_->{evt_from}, 0, 1) eq '-' and $from_minus = 1;
-        substr($_->{evt_to}, 0, 1) eq '-' and $to_minus = 1;
-        $_->{evt_from} = substr($_->{evt_from}, 0, 4 + $from_minus);
-        $_->{evt_to} = substr($_->{evt_to}, 0, 4 + $to_minus);
+        $_->{evt_from} += 0; #substr($_->{evt_from}, 0, 4 + $from_minus);
+        $_->{evt_to} += 0; #substr($_->{evt_to}, 0, 4 + $to_minus);
         my $links = [];
         my $sth = $self->db->dbh->prepare(qq{
             SELECT el.evt_id_2, e.evt_name
