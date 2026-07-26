@@ -70,7 +70,6 @@
         let events = [];
 
         function main() {
-            console.log("hwa1 " + epr_id);
             getEvents();
             document.getElementById('headBlock').innerHTML = Head();
             document.getElementById('menuBlock').innerHTML = Menu();
@@ -81,10 +80,8 @@
 
         function getEvents() {
             if (isFirstTime()) {
-            console.log("hwa2 " + epr_id);
                 getAllREST();
             } else {
-            console.log("hwa3 " + epr_id);
                 reloadFromLocalStorage();
             }
         }
@@ -286,7 +283,6 @@
             let html = `<select onchange="
                 localStorage.epr_id = this.options[this.selectedIndex].getAttribute('id');
                 epr_id = localStorage.epr_id;
-                console.log('>>> '+localStorage.epr_id);
                 updatePageEvents();
             ">`;
             const eventPeriods = JSON.parse(localStorage.getItem('event_periods') || '[]');
