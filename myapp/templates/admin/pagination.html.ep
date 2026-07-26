@@ -1,0 +1,14 @@
+% if ($pager->{total_pages} > 1) {
+  <nav class="pagination" aria-label="Pagination">
+    <span>Showing <%= $pager->{first} %>–<%= $pager->{last} %> of <%= $pager->{total} %></span>
+    <div>
+      % if ($pager->{page} > 1) {
+        <a class="button subtle" rel="prev" href="<%= url_for($path)->query(%{stash('filters') || {}}, page => $pager->{page} - 1) %>">Previous</a>
+      % }
+      <span class="page-status">Page <%= $pager->{page} %> of <%= $pager->{total_pages} %></span>
+      % if ($pager->{page} < $pager->{total_pages}) {
+        <a class="button subtle" rel="next" href="<%= url_for($path)->query(%{stash('filters') || {}}, page => $pager->{page} + 1) %>">Next</a>
+      % }
+    </div>
+  </nav>
+% }

@@ -1,0 +1,7 @@
+requires 'Mojolicious', '>= 9.0';
+requires 'DBI';
+requires 'DBD::SQLite';
+
+on test => sub {
+  requires 'Test::More';
+};

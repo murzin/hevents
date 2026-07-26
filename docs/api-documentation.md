@@ -2,6 +2,11 @@
 
 This documentation describes the REST API endpoints for managing events, event types, event places, and event links.
 
+Every REST resource is available both at the documented root path and below
+`/api` for compatibility with the original `hevents` frontend. For example,
+`/events` and `/api/events` are equivalent. The server-rendered administration
+interface is available at `/admin`.
+
 ## Base Endpoints
 
 ### Events
@@ -18,8 +23,10 @@ This documentation describes the REST API endpoints for managing events, event t
   - `evt_to`: End date/time
   - `etp_id`: Event type ID
   - `epl_id`: Event place ID
+  - `epr_id`: Event period ID
   - `etp_name`: Event type name
   - `epl_name`: Event place name
+  - `epr_name`: Event period name
 
 #### Create Event
 - **POST** `/events`
@@ -33,7 +40,8 @@ This documentation describes the REST API endpoints for managing events, event t
     "evt_from": "datetime",
     "evt_to": "datetime",
     "etp_id": "integer",
-    "epl_id": "integer"
+    "epl_id": "integer",
+    "epr_id": "integer"
 }
 ```
 - **Response**: `{ "id": "integer" }`
@@ -124,6 +132,45 @@ This documentation describes the REST API endpoints for managing events, event t
   - `id`: Event place ID
 - **Response**: `{ "success": 1 }`
 
+### Event Periods
+
+#### List Event Periods
+- **GET** `/event_periods`
+- **Description**: Retrieves all event periods
+- **Response**: Array of event period objects
+
+#### Create Event Period
+- **POST** `/event_periods`
+- **Description**: Creates a new event period
+- **Request Body**:
+```json
+{
+    "epr_name": "string"
+}
+```
+- **Response**: `{ "id": "integer" }`
+
+#### Get Event Period
+- **GET** `/event_periods/:id`
+- **Description**: Retrieves a specific event period
+- **Response**: Event period object or empty object if not found
+
+#### Update Event Period
+- **PUT** `/event_periods/:id`
+- **Description**: Updates an existing event period
+- **Request Body**:
+```json
+{
+    "epr_name": "string"
+}
+```
+- **Response**: `{ "success": 1 }`
+
+#### Delete Event Period
+- **DELETE** `/event_periods/:id`
+- **Description**: Deletes an event period
+- **Response**: `{ "success": 1 }`
+
 ### Event Links
 
 #### List Linked Events
@@ -170,8 +217,10 @@ This documentation describes the REST API endpoints for managing events, event t
     evt_to: datetime     // End date/time
     etp_id: integer     // Event type ID
     epl_id: integer     // Event place ID
+    epr_id: integer     // Event period ID
     etp_name: string    // Event type name
     epl_name: string    // Event place name
+    epr_name: string    // Event period name
 }
 ```
 
@@ -188,6 +237,14 @@ This documentation describes the REST API endpoints for managing events, event t
 {
     epl_id: integer     // Event place ID
     epl_name: string    // Event place name
+}
+```
+
+### Event Period
+```
+{
+    epr_id: integer     // Event period ID
+    epr_name: string    // Event period name
 }
 ```
 

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · HEvents Admin</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/admin"><span>H</span>Events Admin</a>
+    <nav aria-label="Main navigation">
+      <a href="/admin/events">Events</a>
+      <a href="/admin/event_types">Types</a>
+      <a href="/admin/event_places">Places</a>
+      <a href="/admin/event_periods">Periods</a>
+      <a href="/admin/event-links">Links</a>
+    </nav>
+  </header>
+  <main class="shell">
+    % if (flash('success')) {
+      <div class="notice success"><%= flash('success') %></div>
+    % }
+    % if (flash('error')) {
+      <div class="notice error"><%= flash('error') %></div>
+    % }
+    <%= content %>
+  </main>
+</body>
+</html>
