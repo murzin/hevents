@@ -63,11 +63,14 @@
         const API_EVENTS = '/api/events';
         const API_EVENTTYPES = '/api/event_types';
         const API_EVENTPLACES = '/api/event_places';
+        const API_EVENTPERIODS = '/api/event_periods';
         let etp_ids = [];
         let epl_ids = [];
+        let epr_id = 1;
         let events = [];
 
         function main() {
+            console.log("hwa1 " + epr_id);
             getEvents();
             document.getElementById('headBlock').innerHTML = Head();
             document.getElementById('menuBlock').innerHTML = Menu();
@@ -78,14 +81,17 @@
 
         function getEvents() {
             if (isFirstTime()) {
+            console.log("hwa2 " + epr_id);
                 getAllREST();
             } else {
+            console.log("hwa3 " + epr_id);
                 reloadFromLocalStorage();
             }
         }
 
         function getAllREST() {
             getEventTypesREST();
+            getEventPeriodsREST();
             getEventPlacesREST();
             getEventsREST();
         }
@@ -102,6 +108,20 @@
                 storeToDb(data);
             })
             .catch(error => console.error('Error fetching events:', error));
+        }
+
+        function getEventPeriodsREST() {
+            fetch(API_HOST + API_EVENTPERIODS, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem('event_periods', JSON.stringify(data));
+            })
+            .catch(error => console.error('Error fetching event periods:', error));
         }
 
         function getEventTypesREST() {
@@ -182,6 +202,9 @@
                         localStorage.setItem('epl_ids', JSON.stringify(uniqueEplIds));
                         uniqueEplIds.forEach(epl_id => localStorage.setItem('placeColor' + epl_id, randColor(100)));
                     }
+                    if (!localStorage.getItem('epr_id')) {
+                        localStorage.setItem('epr_id', epr_id);
+                    }
                     
                     reloadFromLocalStorage();
                 };
@@ -201,6 +224,7 @@
                     const allEvents = getAllRequest.result;
                     db.close();
                     events = allEvents.filter(event =>
+                        epr_id == event.epr_id &&
                         etp_ids.includes(event.etp_id) && 
                         epl_ids.includes(event.epl_id)
                         &&
@@ -245,13 +269,32 @@
         function updatePageTypesPlaces() {
             etp_ids = JSON.parse(localStorage.getItem('etp_ids') || '[]');
             epl_ids = JSON.parse(localStorage.getItem('epl_ids') || '[]');
+            epr_id = localStorage.getItem('epr_id');
         }
 
         function isFirstTime() {
-            if (localStorage.getItem('etp_ids') && localStorage.getItem('epl_ids')) {
+            if (localStorage.getItem('etp_ids')
+                && localStorage.getItem('epl_ids')
+                && localStorage.getItem('epr_id')
+                ) {
                 return false;
             }
             return true;
+        }
+
+        function createPeriodsSelect() {
+            let html = `<select onchange="
+                localStorage.epr_id = this.options[this.selectedIndex].getAttribute('id');
+                epr_id = localStorage.epr_id;
+                console.log('>>> '+localStorage.epr_id);
+                updatePageEvents();
+            ">`;
+            const eventPeriods = JSON.parse(localStorage.getItem('event_periods') || '[]');
+            eventPeriods.forEach(period => {
+                html += `<option id=${period.epr_id} ${period.epr_id == epr_id ? 'selected' : ''}>${period.epr_name}</option>`;
+            });
+            html += `</select>`;
+            return html;
         }
 
         function createTypesCheckboxes() {
@@ -539,6 +582,9 @@
                         To: <input id="evt_to" style="width:50px" type="text" name="evt_to" value="${!!localStorage.evt_to?localStorage.evt_to:''}">
                         <button onclick="setRange()" style="width:20px">>></button>
                         <button onclick="window.document.getElementById('evt_from').value=''; window.document.getElementById('evt_to').value='';setRange()" style="width:20px">X</button>
+                    </td></tr>
+                    <tr><td>
+                        ${createPeriodsSelect()}
                         <br><br>
                     </td></tr>
                     <tr>
@@ -614,6 +660,7 @@
             }
             return html;
         }
+
         function Footer() {
             return `
                 <small>work in progress..</small>
