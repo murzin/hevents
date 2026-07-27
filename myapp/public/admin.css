@@ -78,6 +78,7 @@ textarea { resize: vertical; }
 input:focus, textarea:focus, select:focus { outline: 3px solid rgba(214, 168, 63, .25); border-color: var(--gold); }
 .stack > * + * { border-top: 1px solid var(--line); }
 .inline-record { padding: 14px 20px; display: grid; grid-template-columns: 60px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; }
+.inline-record.with-period { grid-template-columns: 60px minmax(0, 1fr) minmax(150px, .65fr) auto auto; }
 .inline-record input { min-height: 38px; }
 .record-id, .muted { color: var(--muted); font-variant-numeric: tabular-nums; }
 .table-wrap { overflow: auto; }

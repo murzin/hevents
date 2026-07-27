@@ -95,8 +95,8 @@ sub _admin_routes ($self) {
     $c->render(template => 'admin/dashboard');
   });
 
-  _admin_simple($self, 'event_types', 'etp_id', 'etp_name', 'Event types', 'event type');
-  _admin_simple($self, 'event_places', 'epl_id', 'epl_name', 'Event places', 'event place');
+  _admin_simple($self, 'event_types', 'etp_id', 'etp_name', 'Event types', 'event type', 1);
+  _admin_simple($self, 'event_places', 'epl_id', 'epl_name', 'Event places', 'event place', 1);
   _admin_simple($self, 'event_periods', 'epr_id', 'epr_name', 'Event periods', 'event period');
 
   $r->get('/admin/events')->to(cb => sub ($c) {
@@ -235,39 +235,70 @@ sub _admin_routes ($self) {
   });
 }
 
-sub _admin_simple ($self, $table, $id_col, $name_col, $title, $singular) {
+sub _admin_simple ($self, $table, $id_col, $name_col, $title, $singular, $with_period = 0) {
   my $r = $self->routes;
   my $path = "/admin/$table";
   $r->get($path)->to(cb => sub ($c) {
     my $total = 0 + $c->db->dbh->selectrow_array("SELECT COUNT(*) FROM $table");
     my $pager = _pagination($c, $total);
+    my $select = $with_period
+      ? "$table.$id_col, $table.$name_col, $table.epr_id, event_periods.epr_name"
+      : "$table.$id_col, $table.$name_col";
+    my $join = $with_period
+      ? ' LEFT JOIN event_periods ON event_periods.epr_id = ' . $table . '.epr_id'
+      : '';
     my $rows = $c->db->dbh->selectall_arrayref(
-      "SELECT $id_col, $name_col FROM $table ORDER BY $id_col LIMIT ? OFFSET ?",
+      "SELECT $select FROM $table$join ORDER BY $table.$id_col LIMIT ? OFFSET ?",
       {Slice => {}}, $pager->{per_page}, $pager->{offset}
     );
+    my $periods = $with_period
+      ? $c->db->dbh->selectall_arrayref(
+          'SELECT epr_id, epr_name FROM event_periods ORDER BY epr_name',
+          {Slice => {}}
+        )
+      : [];
     $c->stash(
       rows => $rows, id_col => $id_col, name_col => $name_col,
-      title => $title, singular => $singular, path => $path, pager => $pager
+      title => $title, singular => $singular, path => $path, pager => $pager,
+      with_period => $with_period, periods => $periods
     );
     $c->render(template => 'admin/simple');
   });
   $r->post($path)->to(cb => sub ($c) {
     return _admin_error($c, $path, 'Name is required')
       unless defined $c->param($name_col) && $c->param($name_col) ne '';
+    return _admin_error($c, $path, 'Period is required')
+      if $with_period && (($c->param('epr_id') // '') !~ /^\d+$/);
     _admin_write($c, $path, ucfirst($singular) . ' created', sub {
-      $c->db->dbh->do(
-        "INSERT INTO $table ($name_col) VALUES (?)", undef, $c->param($name_col)
-      );
+      if ($with_period) {
+        $c->db->dbh->do(
+          "INSERT INTO $table ($name_col, epr_id) VALUES (?, ?)",
+          undef, $c->param($name_col), $c->param('epr_id')
+        );
+      } else {
+        $c->db->dbh->do(
+          "INSERT INTO $table ($name_col) VALUES (?)", undef, $c->param($name_col)
+        );
+      }
     });
   });
   $r->post("$path/:id")->to(cb => sub ($c) {
     return _admin_error($c, $path, 'Name is required')
       unless defined $c->param($name_col) && $c->param($name_col) ne '';
+    return _admin_error($c, $path, 'Period is required')
+      if $with_period && (($c->param('epr_id') // '') !~ /^\d+$/);
     _admin_write($c, $path, ucfirst($singular) . ' updated', sub {
-      $c->db->dbh->do(
-        "UPDATE $table SET $name_col=? WHERE $id_col=?",
-        undef, $c->param($name_col), $c->param('id')
-      );
+      if ($with_period) {
+        $c->db->dbh->do(
+          "UPDATE $table SET $name_col=?, epr_id=? WHERE $id_col=?",
+          undef, $c->param($name_col), $c->param('epr_id'), $c->param('id')
+        );
+      } else {
+        $c->db->dbh->do(
+          "UPDATE $table SET $name_col=? WHERE $id_col=?",
+          undef, $c->param($name_col), $c->param('id')
+        );
+      }
     });
   });
   $r->post("$path/:id/delete")->to(cb => sub ($c) {
