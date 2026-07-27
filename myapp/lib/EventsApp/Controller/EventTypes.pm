@@ -11,8 +11,10 @@ sub list {
 sub create {
     my $self = shift;
     my $data = $self->req->json;
-    my $sth = $self->db->dbh->prepare('INSERT INTO event_types (etp_name) VALUES (?)');
-    $sth->execute($data->{etp_name});
+    my $sth = $self->db->dbh->prepare(
+        'INSERT INTO event_types (etp_name, epr_id) VALUES (?, ?)'
+    );
+    $sth->execute($data->{etp_name}, $data->{epr_id});
     $self->render(json => { id => $self->db->dbh->last_insert_id() });
 }
 

@@ -8,9 +8,16 @@
     <div class="panel-heading"><h2>All <%= lc $title %></h2><span class="count"><%= $pager->{total} %></span></div>
     <div class="stack">
       % for my $row (@$rows) {
-        <form class="inline-record" method="post" action="<%= $path %>/<%= $row->{$id_col} %>">
+        <form class="inline-record<%= ' with-period' if $with_period %>" method="post" action="<%= $path %>/<%= $row->{$id_col} %>">
           <span class="record-id">#<%= $row->{$id_col} %></span>
           <input name="<%= $name_col %>" value="<%= $row->{$name_col} %>" aria-label="<%= $singular %> name" required>
+          % if ($with_period) {
+            <select name="epr_id" aria-label="<%= $singular %> period" required>
+              % for my $period (@$periods) {
+                <option value="<%= $period->{epr_id} %>" <%= 'selected' if ($row->{epr_id} // '') eq $period->{epr_id} %>><%= $period->{epr_name} %></option>
+              % }
+            </select>
+          % }
           <button class="button subtle" type="submit">Save</button>
           <button class="button danger" type="submit" formaction="<%= $path %>/<%= $row->{$id_col} %>/delete"
             onclick="return confirm('Delete this <%= $singular %>?')">Delete</button>
@@ -27,6 +34,14 @@
     <h2>New <%= $singular %></h2>
     <form method="post" action="<%= $path %>">
       <label>Name<input name="<%= $name_col %>" required autofocus></label>
+      % if ($with_period) {
+        <label>Period<select name="epr_id" required>
+          <option value="">Choose a period</option>
+          % for my $period (@$periods) {
+            <option value="<%= $period->{epr_id} %>"><%= $period->{epr_name} %></option>
+          % }
+        </select></label>
+      % }
       <button class="button primary" type="submit">Create <%= $singular %></button>
     </form>
   </aside>

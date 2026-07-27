@@ -43,6 +43,38 @@ if ($events_exists) {
   }
 }
 
+# Add period relationships to legacy event type and place records. Existing
+# rows are assigned to an explicit fallback instead of guessing a period.
+for my $entity (
+  ['event_types',  'etp_id'],
+  ['event_places', 'epl_id'],
+) {
+  my ($table) = @$entity;
+  my ($table_exists) = $dbh->selectrow_array(
+    q{SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?},
+    undef, $table
+  );
+  next unless $table_exists;
+
+  my $columns = $dbh->selectall_hashref("PRAGMA table_info($table)", 'name');
+  next if $columns->{epr_id};
+
+  $dbh->do(q{
+    CREATE TABLE IF NOT EXISTS event_periods (
+      epr_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      epr_name TEXT NOT NULL UNIQUE
+    )
+  });
+  $dbh->do(q{INSERT OR IGNORE INTO event_periods (epr_name) VALUES ('Unspecified')});
+  my ($default_period) = $dbh->selectrow_array(
+    q{SELECT epr_id FROM event_periods WHERE epr_name = 'Unspecified'}
+  );
+  $dbh->do(
+    "ALTER TABLE $table ADD COLUMN epr_id INTEGER REFERENCES event_periods(epr_id)"
+  );
+  $dbh->do("UPDATE $table SET epr_id = ? WHERE epr_id IS NULL", undef, $default_period);
+}
+
 # Rebuild event_links when upgrading from the version that used cascading
 # foreign keys and enforced evt_id_1 < evt_id_2.
 my ($event_links_sql) = $dbh->selectrow_array(

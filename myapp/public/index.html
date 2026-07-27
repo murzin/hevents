@@ -284,6 +284,7 @@
                 localStorage.epr_id = this.options[this.selectedIndex].getAttribute('id');
                 epr_id = localStorage.epr_id;
                 updatePageEvents();
+                return false;
             ">`;
             const eventPeriods = JSON.parse(localStorage.getItem('event_periods') || '[]');
             eventPeriods.forEach(period => {
@@ -295,7 +296,8 @@
 
         function createTypesCheckboxes() {
             let html = `<h3><a href="#" class="menu_title" onclick="toggleEventType('all', 'true'); return false;">Types</a></h3>`;
-            const eventTypes = JSON.parse(localStorage.getItem('event_types') || '[]');
+            const ept = JSON.parse(localStorage.getItem('event_types') || '[]');
+            const eventTypes = ept.filter(type => type.epr_id == epr_id);
             
             if (eventTypes.length === 0) {
                 html += '<p>No event types available</p>';
@@ -326,7 +328,8 @@
 
         function createPlaceCheckboxes() {
             let html = `<h3><a href="#" class="menu_title" onclick="toggleEventPlace('all', 'true'); return false;">Places</a></h3>`;
-            const eventPlaces = JSON.parse(localStorage.getItem('event_places') || '[]');
+            const epl = JSON.parse(localStorage.getItem('event_places') || '[]');
+            const eventPlaces = epl.filter(place => place.epr_id == epr_id);
             
             if (eventPlaces.length === 0) {
                 html += '<p>No event places available</p>';
